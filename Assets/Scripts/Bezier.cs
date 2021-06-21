@@ -4,6 +4,14 @@ using UnityEngine;
 
 public static class Bezier
 {
+    public static Vector3 GetTwoPoint(Vector3 p0, Vector3 p1, float t)
+    {
+        t = Mathf.Clamp01(t);
+        float oneMinusT = 1f - t;
+        
+        return oneMinusT * p0 + t * p1;
+    }
+
     public static Vector3 GetThreePoint(Vector3 p0, Vector3 p1, Vector3 p2, float t)
     {
         t = Mathf.Clamp01(t);

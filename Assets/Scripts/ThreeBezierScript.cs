@@ -39,27 +39,11 @@ public class ThreeBezierScript : MonoBehaviour
         }
     }
 
-    private int fff()
-    {
-        return Random.value >= 0.5 ? 1 : -1;
-    }
-
     private void RandomP1()
     {
         Vector3 testP1position = new Vector3( P0.position.x + Random.Range(3f, 7f) * fff(), 
             P0.position.y + Random.Range(3f, 7f) * fff(), 0 );
         P1.position = testP1position;
-    }
-
-    private void aaa()
-    {
-        // x += Time.deltaTime * 0.5f;
-        // t = x;
-
-        // transform.position = Bezier.GetThreePoint(P0.position, P1.position, P2.position, t);
-        // transform.rotation = Quaternion.LookRotation( new Vector3(0, 0, 1), Bezier.GetFirstDerivativeForThreePoints(P0.position, P1.position, P2.position, t) );
-
-        StartCoroutine( waiter() );
     }
 
     IEnumerator waiter()
@@ -85,6 +69,10 @@ public class ThreeBezierScript : MonoBehaviour
         // transform.Rotate(new Vector3(20, 0, 0), Space.World);
     }
 
+    private void OnMouseDown() {
+        
+    }
+
     private void OnDrawGizmos() {
         int sigmentNumbers     = 40;
         Vector3 preveousePoint = P0.position;
@@ -94,15 +82,24 @@ public class ThreeBezierScript : MonoBehaviour
 
             Vector3 point = Bezier.GetThreePoint(P0.position, P1.position, P2.position, parameter);
 
-            Gizmos.DrawSphere(point, 0.5f);
-            // Gizmos.DrawLine(preveousePoint, point);
-
+            Gizmos.DrawSphere(point, 0.08f);
             Gizmos.color = Color.magenta;
-            // if( i % 2 == 0) Gizmos.color = Color.clear;
-            // else Gizmos.color = Color.red;
 
             preveousePoint = point;
         }
+
+        for( int i=0; i<sigmentNumbers+1; i++ )
+        {
+            float parameter = (float)i / sigmentNumbers;
+
+            Vector3 point = Bezier.GetTwoPoint(P2.position, P1.position, parameter);
+
+            Gizmos.DrawSphere(point, 0.08f);
+            Gizmos.color = Color.green;
+
+            preveousePoint = point;            
+        }
+
     }
 
 }
