@@ -94,7 +94,7 @@ public class ThreeBezierScript : MonoBehaviour
 
             Vector3 point = Bezier.GetThreePoint(P0.position, P1.position, P2.position, parameter);
 
-            Gizmos.DrawSphere(point, 0.05f);
+            Gizmos.DrawSphere(point, 0.5f);
             // Gizmos.DrawLine(preveousePoint, point);
 
             Gizmos.color = Color.magenta;
