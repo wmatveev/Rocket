@@ -11,6 +11,8 @@ public class ThreeBezierScript : MonoBehaviour
 
     [SerializeField] private AnimationCurve health;
 
+    [SerializeField] private float speed = 0.5f;
+
     [Range(0, 1)]
     [SerializeField] private float t;
 
@@ -25,9 +27,7 @@ public class ThreeBezierScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // x = (float)i / 400;
-        x += Time.deltaTime * 0.5f;
-
+        x += Time.deltaTime * speed;
         t = x;
 
         transform.position = Bezier.GetThreePoint(P0.position, P1.position, P2.position, t);
@@ -41,11 +41,15 @@ public class ThreeBezierScript : MonoBehaviour
 
     private void RandomP1()
     {
-        Vector3 testP1position = new Vector3( P0.position.x + Random.Range(3f, 7f) * fff(), 
-            P0.position.y + Random.Range(3f, 7f) * fff(), 0 );
+        Vector3 testP1position = new Vector3( P0.position.x + Random.Range(3f, 7f) * randomPlusMinus(), 
+            P0.position.y + Random.Range(3f, 7f) * randomPlusMinus(), 0 );
         P1.position = testP1position;
     }
 
+    private int randomPlusMinus()
+    {
+        return Random.value >= 0.5 ? 1 : -1;
+    }
     IEnumerator waiter()
     {
         // //Rotate 90 deg
@@ -74,6 +78,7 @@ public class ThreeBezierScript : MonoBehaviour
     }
 
     private void OnDrawGizmos() {
+    //Отрисовка кривой Безье
         int sigmentNumbers     = 40;
         Vector3 preveousePoint = P0.position;
 
@@ -88,8 +93,9 @@ public class ThreeBezierScript : MonoBehaviour
             preveousePoint = point;
         }
 
+        //Отрисовка прямой
         for( int i=0; i<sigmentNumbers+1; i++ )
-        {
+        {   
             float parameter = (float)i / sigmentNumbers;
 
             Vector3 point = Bezier.GetTwoPoint(P2.position, P1.position, parameter);
