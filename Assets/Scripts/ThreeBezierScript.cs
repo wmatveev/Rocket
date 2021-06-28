@@ -16,27 +16,60 @@ public class ThreeBezierScript : MonoBehaviour
     [Range(0, 1)]
     [SerializeField] private float t;
 
-    private IEnumerator coroutine;
-
     private float x = 0f;
-    // private int i = 0;
-
-    private void Start() {
+    [HideInInspector] public bool move = false;
+    public Mode currentMode;
+    public enum Mode
+    {
+        loop,
+        rocketGuidance
     }
 
-    // Update is called once per frame
+    private void Start() {
+        if (currentMode == Mode.loop)
+        {
+            move = true;
+        }
+
+
+    }
+
     void Update()
+    {
+        if (move == true)
+        {
+            MoveForward();
+
+            if (t >= 1)
+            {
+                if (currentMode == Mode.loop)
+                {
+                    x = 0;
+                    RandomP1();
+                }
+                if (currentMode == Mode.rocketGuidance)
+                {
+                    x = 0;
+                    move = false;
+                    gameObject.SetActive(false);
+                }
+            }
+        }
+    }
+
+    public void MoveForward()
     {
         x += Time.deltaTime * speed;
         t = x;
-
+        
         transform.position = Bezier.GetThreePoint(P0.position, P1.position, P2.position, t);
-        transform.rotation = Quaternion.LookRotation( new Vector3(0, 0, 1), Bezier.GetFirstDerivativeForThreePoints(P0.position, P1.position, P2.position, t) );
+        transform.rotation = Quaternion.LookRotation(new Vector3(0, 0, 1), 
+            Bezier.GetFirstDerivativeForThreePoints(P0.position, P1.position, P2.position, t));
+    }
 
-        if( t >= 1 ) {
-            x = 0;
-            RandomP1();
-        }
+    public ThreeBezierScript(Transform P0, Transform P1, Transform P2)
+    {
+        SetPoints(P0, P1, P2);
     }
 
     private void RandomP1()
@@ -55,13 +88,10 @@ public class ThreeBezierScript : MonoBehaviour
         // //Rotate 90 deg
         // transform.Rotate(new Vector3(90, 0, 0), Space.World);
 
-        // Debug.Log("Started Coroutine at timestamp : " + Time.time);
+        //Debug.Log("Started Coroutine at timestamp : " + Time.time);
 
         //Wait for 4 seconds
         yield return new WaitForSeconds(4);
-
-        // Debug.Log("Finished Coroutine at timestamp : " + Time.time);
-
 
         // //Rotate 40 deg
         // transform.Rotate(new Vector3(40, 0, 0), Space.World);
@@ -73,12 +103,8 @@ public class ThreeBezierScript : MonoBehaviour
         // transform.Rotate(new Vector3(20, 0, 0), Space.World);
     }
 
-    private void OnMouseDown() {
-        
-    }
-
     private void OnDrawGizmos() {
-    //Отрисовка кривой Безье
+
         int sigmentNumbers     = 40;
         Vector3 preveousePoint = P0.position;
 
@@ -93,7 +119,6 @@ public class ThreeBezierScript : MonoBehaviour
             preveousePoint = point;
         }
 
-        //Отрисовка прямой
         for( int i=0; i<sigmentNumbers+1; i++ )
         {   
             float parameter = (float)i / sigmentNumbers;
@@ -105,7 +130,35 @@ public class ThreeBezierScript : MonoBehaviour
 
             preveousePoint = point;            
         }
-
+        Gizmos.DrawSphere(P1.transform.position, 0.5f);
     }
 
+    public void SetPoints(Transform P0, Transform P1, Transform P2)
+    {
+        this.P0 = P0;
+        this.P1 = P1;
+        this.P2 = P2;
+    }
+    public void SetPointP1(Transform P1)
+    {
+        this.P1 = P1;
+    }
+
+    public void SetPointP2(Transform P2)
+    {
+        this.P2 = P2;
+    }
+
+    void OnTriggerEnter2D(Collider2D col)
+    {
+        if (currentMode != Mode.loop)
+        {
+            if (col.gameObject.tag == gameObject.tag)
+            {
+                return;
+            }
+            Destroy(P1.gameObject);
+            Destroy(gameObject);
+        }
+    }
 }
