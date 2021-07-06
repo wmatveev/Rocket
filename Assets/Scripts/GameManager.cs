@@ -9,24 +9,23 @@ public class GameManager : MonoBehaviour
     #region Singleton
     public static GameManager Instance { get; private set; }
     #endregion
-    
-    public List<KeyValuePair<GameObject, ThreeBezierScript>> playerRocketsPool = new List<KeyValuePair<GameObject, ThreeBezierScript>>();
-    public List<KeyValuePair<GameObject, ThreeBezierScript>> enemyRocketsPool = new List<KeyValuePair<GameObject, ThreeBezierScript>>();
-    public List<KeyValuePair<GameObject, ThreeBezierScript>> currEnemyRockets = new List<KeyValuePair<GameObject, ThreeBezierScript>>();
 
-    public GameObject losePanel, winPanel;
-    public GameObject homePlanet, enemyPlanet;
+    public List<ThreeBezierScript> playerRocketsPool = new List<ThreeBezierScript>();
+    public List<ThreeBezierScript> enemyRocketsPool = new List<ThreeBezierScript>();
+    public List<ThreeBezierScript> currEnemyRockets = new List<ThreeBezierScript>();
+
+    [HideInInspector] public GameObject losePanel, winPanel;
+    [HideInInspector] public GameObject homePlanet, enemyPlanet;
+   
     public int amountOfPlayerRockets;
-    public int amountOfEnemyRocketsOnLevel = 0;
 
-    public int currentLevel;
-    public int score = 0;
+    [HideInInspector] public int currentLevel;
+    [HideInInspector] public int score = 0;
     private void Awake()
     {
         Instance = this;
 
         Time.timeScale = 1;
-
         homePlanet = GameObject.FindWithTag("HomePlanet");
         enemyPlanet = GameObject.FindWithTag("EnemyPlanet");
 
@@ -35,6 +34,24 @@ public class GameManager : MonoBehaviour
         winPanel = GameObject.Find("winPanel");
         winPanel.SetActive(false);
 
+        SetCurrentLevel();
+    }
+
+    void Start()
+    {
+        SetLevelSettings();
+
+        createRocketPool("Rocket", amountOfPlayerRockets + 40);
+        createRocketPool("EnemyRocket", amountOfERocketsOnLevel);        
+    }
+    #region LevelSettings
+    [HideInInspector]
+    public int amountOfERocketsOnLevel = 0, //how many rockets we need to destroy to win
+        eRocketsToLaunch = 0, //allowed number enemy rockets at the same time on level
+        launchedERockets = 0; //counter of launched rockets
+    private float speedCoef;
+    private void SetCurrentLevel()
+    {
         if (PlayerPrefs.HasKey("currentLevel"))
             currentLevel = PlayerPrefs.GetInt("currentLevel");
         else
@@ -42,10 +59,15 @@ public class GameManager : MonoBehaviour
             currentLevel = 1;
             PlayerPrefs.SetInt("currentLevel", 1);
         }
-        amountOfEnemyRocketsOnLevel = 4 + currentLevel;
-        createRocketPool("Rocket", amountOfPlayerRockets + 40);
-        createRocketPool("EnemyRocket", amountOfEnemyRocketsOnLevel);
     }
+    private void SetLevelSettings()
+    {
+        amountOfERocketsOnLevel = 3 + currentLevel;
+        eRocketsToLaunch = (currentLevel / 5) + 1; 
+        speedCoef = 1f + (currentLevel % 5)/ 10f;
+        EnemyAI.Instance.timeToReload = (currentLevel < 5) ? 0 : (float)(1f + Random.value);
+    }
+    #endregion
 
     #region RocketsManagement
     private void createRocketPool(string type, int count)
@@ -57,64 +79,74 @@ public class GameManager : MonoBehaviour
         {
             var tmp_rocket = Instantiate(rocket, rocketsPoolObj.transform); 
             if (type == "Rocket")
-                playerRocketsPool.Add(new KeyValuePair<GameObject, ThreeBezierScript>(tmp_rocket, tmp_rocket.GetComponent<ThreeBezierScript>()));
+                playerRocketsPool.Add(tmp_rocket.GetComponent<ThreeBezierScript>());
             if (type == "EnemyRocket") 
-                enemyRocketsPool.Add(new KeyValuePair<GameObject, ThreeBezierScript>(tmp_rocket, tmp_rocket.GetComponent<ThreeBezierScript>()));
+                enemyRocketsPool.Add(tmp_rocket.GetComponent<ThreeBezierScript>());
             tmp_rocket.SetActive(false);
         }
         Destroy(rocket);
     }
 
-    public KeyValuePair<GameObject, ThreeBezierScript> GetRocketFromPool(RocketLauncher.Mode mode)
+    public ThreeBezierScript GetRocketFromPool(RocketLauncher.Mode mode)
     {
-        KeyValuePair<GameObject, ThreeBezierScript> rocketTmp = new KeyValuePair<GameObject, ThreeBezierScript>();
+        ThreeBezierScript rocketTmp = new ThreeBezierScript();
         if (mode == RocketLauncher.Mode.manualAiming || (amountOfPlayerRockets > 0)) 
         {
             rocketTmp = playerRocketsPool[0];
             playerRocketsPool.Remove(rocketTmp);
-            rocketTmp.Key.gameObject.SetActive(true);
-            rocketTmp.Key.transform.parent = null;
+            rocketTmp.gameObject.SetActive(true);
+            rocketTmp.gameObject.transform.parent = null;
             if (mode == RocketLauncher.Mode.rocketGuidance)
                 amountOfPlayerRockets--;
         }
         return rocketTmp;
     }
 
-    public void RocketBackToPool(KeyValuePair<GameObject, ThreeBezierScript> rocket)
+    public void RocketBackToPool(ThreeBezierScript rocket)
     {
-        rocket.Key.transform.SetParent(playerRocketsPool[0].Key.transform.parent);
-        rocket.Value.T = 0;
+        rocket.gameObject.transform.SetParent(playerRocketsPool[0].gameObject.transform.parent);
+        rocket.T = 0;
         playerRocketsPool.Add(rocket);
-        rocket.Key.SetActive(false);
-        rocket.Key.transform.position = rocket.Value.P0;
+        rocket.gameObject.SetActive(false);
+        rocket.gameObject.transform.position = rocket.P0;
     }
 
-    public KeyValuePair<GameObject, ThreeBezierScript> GetEnemyRocketFromPool()
+    public ThreeBezierScript GetEnemyRocketFromPool()
     {
-        KeyValuePair<GameObject, ThreeBezierScript> rocketTmp = new KeyValuePair<GameObject, ThreeBezierScript>();
+        ThreeBezierScript rocketTmp = new ThreeBezierScript();
         if (enemyRocketsPool.Count > 0)
         {
             rocketTmp = enemyRocketsPool[0];
-            rocketTmp.Key.gameObject.SetActive(true);
+            rocketTmp.gameObject.gameObject.SetActive(true);
             enemyRocketsPool.Remove(rocketTmp);
-            rocketTmp.Key.transform.parent = null;
-            rocketTmp.Value.Speed *= (1 + GameManager.Instance.currentLevel / 4);
+            rocketTmp.gameObject.transform.parent = null;
+            rocketTmp.speed *= speedCoef;
+            rocketTmp.isDrawn = false;
             currEnemyRockets.Add(rocketTmp);
+            launchedERockets++;
         }
         return rocketTmp;
     }
     
-    public void EnemyRocketBackToPool(KeyValuePair<GameObject, ThreeBezierScript> enemyRocket)
+    public void EnemyRocketBackToPool(ThreeBezierScript enemyRocket)
     {
         if (currEnemyRockets.Contains(enemyRocket))       
             currEnemyRockets.Remove(enemyRocket);
-        score += (int)(100 * enemyRocket.Value.T);
-        enemyRocket.Value.T = 0;
-        enemyRocket.Key.transform.SetParent(enemyRocketsPool[0].Key.transform.parent);
+        score += (int)(100 * (1 - enemyRocket.T));
+        UIMenu.Instance.SetScore();
+        enemyRocket.T = 0;
+        enemyRocket.gameObject.transform.SetParent(enemyRocketsPool[0].gameObject.transform.parent);
         enemyRocketsPool.Add(enemyRocket);
-        enemyRocket.Key.SetActive(false);
-        enemyRocket.Key.transform.position = enemyRocket.Value.P0;
-        amountOfEnemyRocketsOnLevel--;
+        enemyRocket.gameObject.SetActive(false);
+        enemyRocket.gameObject.transform.position = enemyRocket.P0;
+        amountOfERocketsOnLevel--;
+        if (currEnemyRockets.Count == 0)
+            launchedERockets = 0;
+    }
+
+    public bool EnemyCanShoot()
+    {
+        return launchedERockets < eRocketsToLaunch;
     }
     #endregion
 

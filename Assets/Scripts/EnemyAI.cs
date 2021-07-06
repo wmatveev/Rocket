@@ -5,7 +5,6 @@ using UnityEngine;
 public class EnemyAI : MonoBehaviour
 {
     public static EnemyAI Instance { get; private set; }
-    public GameObject rocket;
     public ThreeBezierScript threeBezierScript;
     public float timeToReload = 2f;
     private float cooldown = 0f;
@@ -26,22 +25,22 @@ public class EnemyAI : MonoBehaviour
     void Update()
     {
         cooldown += Time.deltaTime;
-        //if (cooldown > timeToReload ) 
-        if (GameManager.Instance.currEnemyRockets.Count == 0)
+        if (GameManager.Instance.EnemyCanShoot() && cooldown > timeToReload)
             Shoot();
     }
 
+    private bool CanShoot()
+    {
+        return false;
+    }
     private void Shoot()
     {       
-        if (GameManager.Instance.amountOfEnemyRocketsOnLevel == 0)
+        if (GameManager.Instance.amountOfERocketsOnLevel == 0)
         {
             GameManager.Instance.LevelIsCompleted();
         }
 
-        KeyValuePair<GameObject, ThreeBezierScript> enemyRocketInfo;
-        enemyRocketInfo = GameManager.Instance.GetEnemyRocketFromPool();
-        rocket = enemyRocketInfo.Key;
-        ThreeBezierScript bezier = enemyRocketInfo.Value;
+        ThreeBezierScript bezier = GameManager.Instance.GetEnemyRocketFromPool();
 
         bezier.SetPoints(GameManager.Instance.enemyPlanet.transform.position, new Vector3(), GameManager.Instance.homePlanet.transform.position);
         bezier.RandomP1();

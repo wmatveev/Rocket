@@ -13,7 +13,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     public static RocketLauncher Instance { get; private set; }
     #endregion
     
-    [SerializeField] private float offset = 2f;
+    [SerializeField] private float offset = 3f;
     private float currentOffset = 0f;
     private Vector2 clickOffset = new Vector2(), 
                     clickPoint = new Vector2();
@@ -82,9 +82,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     private void RocketLaunch()
     {
-        KeyValuePair<GameObject, ThreeBezierScript> rocketInfo = GameManager.Instance.GetRocketFromPool(currentMode);
-        GameObject rocket = rocketInfo.Key;
-        ThreeBezierScript bezier = rocketInfo.Value;
+        ThreeBezierScript bezier = GameManager.Instance.GetRocketFromPool(currentMode);
 
         if (currentMode == Mode.none)            
             currentMode = bezier.currentMode;        
@@ -94,15 +92,12 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         {
             if (GameManager.Instance.currEnemyRockets.Count > 0)
             {
-                ThreeBezierScript target = GameManager.Instance.currEnemyRockets[armageddonCounter].Value;
+                ThreeBezierScript target = GameManager.Instance.currEnemyRockets[armageddonCounter];
                 bezier.SetPoints(target.P2, target.P1, target.P0);
                 //GameManager.Instance.currEnemyRockets.RemoveAt(0);
                 amountOfPlayerRockets.text = GameManager.Instance.amountOfPlayerRockets.ToString();
             }
-            else GameManager.Instance.RocketBackToPool(rocketInfo);
-            //GameObject P2 = GameManager.Instance.currEnemyRockets.Count > 0 ? GameManager.Instance.currEnemyRockets[0].Key 
-            //: GameManager.Instance.enemyPlanet;
-            //bezier.SetPointP2(P2.transform);
+            else GameManager.Instance.RocketBackToPool(bezier);
         }
         if (currentMode == Mode.manualAiming)
         {
@@ -117,42 +112,8 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         if (currentMode == Mode.manualAiming)
         {
             Ray ray = new Ray(launchPoint.position, new Vector2(launchPoint.position.x, launchPoint.position.y) - clickPoint);
-            //bezier.SetPointP1(ray.GetPoint(currentOffset));
-
-            //GameObject P2 = new GameObject();
-            //P2.transform.position = ray.GetPoint(currentOffset * 10);
-            //bezier.SetPointP2(P2.transform.position);
-
             bezier.SetPoints(launchPoint.position, ray.GetPoint(currentOffset), ray.GetPoint(currentOffset * 10));
         }
-
-        //if (currentMode == Mode.rocketGuidance)
-        //{
-        //    ThreeBezierScript enemyBezier = new ThreeBezierScript();
-        //    try
-        //    {
-        //        enemyBezier = bezier.target.GetComponent<ThreeBezierScript>();
-        //    if (enemyBezier.T >= 2f/3f)
-        //    {
-        //        Ray ray = new Ray(launchPoint.position, new Vector2(bezier.P0.position.x - launchPoint.position.x, bezier.P0.position.y - launchPoint.position.y));
-        //        float distanceY = bezier.P0.position.y - launchPoint.position.y;
-        //        bezier.P1.position = ray.GetPoint(distanceY / 2);
-        //    }
-        //    }
-        //    catch
-        //    {//
-        //        Debug.Log("No tbs");
-        //    }
-
-        //    if (enemyBezier == null)
-        //    {
-        //        bezier.P1 = P1.transform; 
-        //        bezier.RandomP1(0.5f, 3);
-        //        if (bezier.P1.position.y < 0) bezier.P1.position = new Vector2(bezier.P1.position.x, Mathf.Abs(bezier.P1.position.y));
-        //    }
-
-        //   amountOfPlayerRockets.text = GameManager.Instance.amountOfPlayerRockets.ToString();
-        //}
     }
 
     public void changeModeToManualAiming()
@@ -178,13 +139,4 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         }
         armageddonCounter = 0;
     }
-
-    //private void OnDrawGizmos()
-    //{
-    //    Ray ray = new Ray(launchPoint.position, new Vector2(launchPoint.position.x, launchPoint.position.y) - clickPoint);
-    //    Vector2 destination = ray.GetPoint(offset);
-    //    Gizmos.color = Color.cyan;
-    //    Gizmos.DrawLine(clickPoint, destination);
-    //    Gizmos.DrawSphere(launchPoint.position, 0.1f);
-    //}
 }

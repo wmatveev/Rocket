@@ -6,10 +6,6 @@ using System.Threading;
 //[ExecuteAlways]
 public class ThreeBezierScript : MonoBehaviour
 {
-    //[SerializeField] private Transform p0;
-    //[SerializeField] private Transform p1;
-    //[SerializeField] private Transform p2;
-
     [SerializeField] private Vector3 p0;
     [SerializeField] private Vector3 p1;
     [SerializeField] private Vector3 p2;
@@ -21,21 +17,22 @@ public class ThreeBezierScript : MonoBehaviour
     [SerializeField] private AnimationCurve health;
 
     [SerializeField] private int subdivs = 20;
-    [SerializeField] private float speed = 0.5f;
-    public float Speed { get { return speed; } set { speed = Speed; } }
+    public float speed = 0.5f;
     [Range(0, 1)]
     [SerializeField] private float t = 0f;
     public float T { set { t = T; } get { return t; } }
-    public RocketLauncher.Mode currentMode;
-    private Rigidbody2D rb;
 
-    //нужное для вычисления хорд
+    public RocketLauncher.Mode currentMode;
+    private LineRenderer lineRenderer;
+    public bool isDrawn = false;
+
     public float[] speedByChordsLengths;
     private float totalLength;
 
     void Start() 
     {
         ResetCoords();
+        lineRenderer = GetComponent<LineRenderer>();
     }
 
     void FixedUpdate()
@@ -57,6 +54,8 @@ public class ThreeBezierScript : MonoBehaviour
         //}
         try
         {
+            if (isDrawn == false && lineRenderer != null)
+                DrawPath();
             MoveForward();
         } 
         catch
@@ -80,8 +79,8 @@ public class ThreeBezierScript : MonoBehaviour
         if (gameObject.activeSelf == true)
         {
             if (currentMode == RocketLauncher.Mode.manualAiming)
-                GameManager.Instance.RocketBackToPool(new KeyValuePair<GameObject, ThreeBezierScript> (gameObject, this));
-            Destroy(gameObject);
+                GameManager.Instance.RocketBackToPool(this);
+            else Destroy(gameObject);
         }
     }
     public void MoveForward()
@@ -107,36 +106,21 @@ public class ThreeBezierScript : MonoBehaviour
         return Random.value >= 0.5 ? 1 : -1;
     }
 
-    //private void OnDrawGizmos()
-    //{
-    //    int sigmentNumbers = 40;
-    //    Vector3 preveousePoint = P0.position;
-
-    //    for (int i = 0; i < sigmentNumbers + 1; i++)
-    //    {
-    //        float parameter = (float)i / sigmentNumbers;
-
-    //        Vector3 point = Bezier.GetThreePoint(P0.position, P1.position, P2.position, parameter);
-
-    //        Gizmos.DrawSphere(point, 0.04f);
-    //        Gizmos.color = Color.magenta;
-
-    //        preveousePoint = point;
-    //    }
-
-    //    for (int i = 0; i < sigmentNumbers + 1; i++)
-    //    {
-    //        float parameter = (float)i / sigmentNumbers;
-
-    //        Vector3 point = Bezier.GetTwoPoint(P2.position, P1.position, parameter);
-
-    //        Gizmos.DrawSphere(point, 0.04f);
-    //        Gizmos.color = Color.green;
-
-    //        preveousePoint = point;
-    //    }
-    //    Gizmos.DrawSphere(P1.transform.position, 0.5f);
-    //}
+    private void DrawPath()
+    {
+        int sigmentNumbers = 20;
+        lineRenderer.positionCount = sigmentNumbers + 1;
+        Vector3 preveousePoint = P0;
+        for (int i = 0; i < sigmentNumbers + 1; i++)
+        {
+            float parameter = (float)i / sigmentNumbers;
+            Vector3 point = Bezier.GetThreePoint(P0, P1, P2, parameter);
+            point.z = 1;
+            lineRenderer.SetPosition(i, point);
+            preveousePoint = point;
+        }
+        isDrawn = true;
+    }
 
     public void SetPoints(Vector3 P0, Vector3 P1, Vector3 P2)
     {
@@ -176,17 +160,17 @@ public class ThreeBezierScript : MonoBehaviour
 
             if (currentMode == RocketLauncher.Mode.manualAiming)
             {
-                GameManager.Instance.RocketBackToPool(new KeyValuePair<GameObject, ThreeBezierScript>(gameObject, this));
+                GameManager.Instance.RocketBackToPool(this);
                 return;
             }    
             if (currentMode == RocketLauncher.Mode.enemyAI)
             {
-                GameManager.Instance.EnemyRocketBackToPool(new KeyValuePair<GameObject, ThreeBezierScript>(gameObject, this));  
+                GameManager.Instance.EnemyRocketBackToPool(this);  
                 return;
             }
             if (currentMode == RocketLauncher.Mode.armageddon)
             {
-                GameManager.Instance.RocketBackToPool(new KeyValuePair<GameObject, ThreeBezierScript>(gameObject, this));
+                GameManager.Instance.RocketBackToPool(this);
                 return;
             }
             if (currentMode == RocketLauncher.Mode.rocketGuidance)
