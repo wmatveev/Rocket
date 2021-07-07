@@ -90,7 +90,7 @@ public class GameManager : MonoBehaviour
     public ThreeBezierScript GetRocketFromPool(RocketLauncher.Mode mode)
     {
         ThreeBezierScript rocketTmp = new ThreeBezierScript();
-        if (mode == RocketLauncher.Mode.manualAiming || (amountOfPlayerRockets > 0)) 
+        if (mode != RocketLauncher.Mode.rocketGuidance || (amountOfPlayerRockets > 0)) 
         {
             rocketTmp = playerRocketsPool[0];
             playerRocketsPool.Remove(rocketTmp);

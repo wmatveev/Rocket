@@ -39,4 +39,9 @@ public class UIMenu : MonoBehaviour
         PlayerPrefs.SetInt("currentLevel", GameManager.Instance.currentLevel + 1);
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
+    public void ResetSave()
+    {
+        PlayerPrefs.DeleteAll(); 
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
 }

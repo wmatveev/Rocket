@@ -8,14 +8,15 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 {
     public Text amountOfPlayerRockets;
     [SerializeField] private Transform launchPoint;
-    
+
     #region Singleton
     public static RocketLauncher Instance { get; private set; }
     #endregion
-    
+    //offset is used to draw aim line straight up for a sertain distances
     [SerializeField] private float offset = 3f;
     private float currentOffset = 0f;
-    private Vector2 clickOffset = new Vector2(), 
+    //clickOffset is used to draw aim line straight down independently of start tap position
+    private Vector2 clickOffset = new Vector2(),
                     clickPoint = new Vector2();
 
     private LineRenderer lineRenderer;
@@ -26,6 +27,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         loop,
         rocketGuidance,
         manualAiming,
+        tapLaunch,
         enemyAI,
         armageddon
     }
@@ -48,23 +50,28 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     public virtual void OnPointerDown(PointerEventData eventData)
     {
         currentOffset = offset;
-        clickPoint = launchPoint.position;
-        clickPoint.y -= currentOffset;
-        clickOffset = Camera.main.ScreenToWorldPoint(eventData.position);
-        clickOffset = new Vector2(clickOffset.x - clickPoint.x, clickOffset.y - clickPoint.y);
-
-        OnDrag(eventData);
+        if (currentMode == Mode.tapLaunch)
+        {
+            clickPoint = Camera.main.ScreenToWorldPoint(eventData.position);
+        }
+        if (currentMode == Mode.manualAiming)
+        {
+            clickPoint = launchPoint.position;
+            clickPoint.y -= currentOffset;
+            clickOffset = Camera.main.ScreenToWorldPoint(eventData.position);
+            clickOffset = new Vector2(clickOffset.x - clickPoint.x, clickOffset.y - clickPoint.y);
+            OnDrag(eventData);
+        }
     }
 
     public virtual void OnDrag(PointerEventData eventData)
     {
-        clickPoint = Camera.main.ScreenToWorldPoint(eventData.position);
-        clickPoint = new Vector2(clickPoint.x - clickOffset.x, clickPoint.y - clickOffset.y);
-
-        Ray ray = new Ray(launchPoint.position, new Vector2(launchPoint.position.x, launchPoint.position.y) - clickPoint);
-        Vector2 destination = ray.GetPoint(offset);
         if (currentMode == Mode.manualAiming)
         {
+            clickPoint = Camera.main.ScreenToWorldPoint(eventData.position);
+            clickPoint = new Vector2(clickPoint.x - clickOffset.x, clickPoint.y - clickOffset.y);
+            Ray ray = new Ray(launchPoint.position, new Vector2(launchPoint.position.x, launchPoint.position.y) - clickPoint);
+            Vector2 destination = ray.GetPoint(offset);
             lineRenderer.SetPosition(0, new Vector3(clickPoint.x, clickPoint.y, 2));
             lineRenderer.SetPosition(1, new Vector3(destination.x, destination.y, 2));
         }
@@ -72,22 +79,21 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (currentMode == Mode.manualAiming)
+        if (currentMode == Mode.manualAiming || currentMode == Mode.tapLaunch)
             RocketLaunch();
-        currentOffset = 0f;
-        clickPoint = launchPoint.position;
+
         lineRenderer.SetPosition(0, new Vector3(0, 0, 2));
         lineRenderer.SetPosition(1, new Vector3(0, 0, 2));
+        currentOffset = 0f;
+        clickPoint = launchPoint.position;
     }
 
     private void RocketLaunch()
     {
         ThreeBezierScript bezier = GameManager.Instance.GetRocketFromPool(currentMode);
 
-        if (currentMode == Mode.none)            
-            currentMode = bezier.currentMode;        
-        else bezier.currentMode = currentMode;
-        
+        if (currentMode == Mode.none)
+            Destroy(gameObject);
         if (currentMode == Mode.rocketGuidance || currentMode == Mode.armageddon)
         {
             if (GameManager.Instance.currEnemyRockets.Count > 0)
@@ -99,26 +105,35 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             }
             else GameManager.Instance.RocketBackToPool(bezier);
         }
-        if (currentMode == Mode.manualAiming)
+        if (currentMode == Mode.manualAiming || currentMode == Mode.tapLaunch)
         {
-            SetP1(bezier);
+            SetPoints(bezier);
         }
     }
 
-    private void SetP1(ThreeBezierScript bezier)
+    private void SetPoints(ThreeBezierScript bezier)
     {
-        GameObject P1 = new GameObject();
-        bezier.SetPointP1(P1.transform.position);
+        bezier.SetPointP1(new Vector3());
         if (currentMode == Mode.manualAiming)
         {
             Ray ray = new Ray(launchPoint.position, new Vector2(launchPoint.position.x, launchPoint.position.y) - clickPoint);
-            bezier.SetPoints(launchPoint.position, ray.GetPoint(currentOffset), ray.GetPoint(currentOffset * 10));
+            bezier.SetPoints(launchPoint.position, ray.GetPoint(currentOffset), ray.GetPoint(currentOffset * 100));
+        }
+        if (currentMode == Mode.tapLaunch)
+        {
+            Ray ray = new Ray(launchPoint.position, clickPoint - new Vector2(launchPoint.position.x, launchPoint.position.y));
+            bezier.SetPoints(launchPoint.position, clickPoint, ray.GetPoint(currentOffset * 100)); 
         }
     }
 
     public void changeModeToManualAiming()
     {
         currentMode = Mode.manualAiming;
+    }
+
+    public void changeModeToTapLaunch()
+    {
+        currentMode = Mode.tapLaunch;
     }
 
     public void launchGuidanceRocket()

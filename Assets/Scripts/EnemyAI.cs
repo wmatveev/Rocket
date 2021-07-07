@@ -29,10 +29,6 @@ public class EnemyAI : MonoBehaviour
             Shoot();
     }
 
-    private bool CanShoot()
-    {
-        return false;
-    }
     private void Shoot()
     {       
         if (GameManager.Instance.amountOfERocketsOnLevel == 0)
@@ -47,6 +43,4 @@ public class EnemyAI : MonoBehaviour
         bezier.currentMode = RocketLauncher.Mode.enemyAI;
         cooldown = 0f;
     }
-
-
 }

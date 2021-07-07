@@ -74,15 +74,6 @@ public class ThreeBezierScript : MonoBehaviour
             else Destroy(gameObject);
         }
     }
-    void OnBecameInvisible()
-    {
-        if (gameObject.activeSelf == true)
-        {
-            if (currentMode == RocketLauncher.Mode.manualAiming)
-                GameManager.Instance.RocketBackToPool(this);
-            else Destroy(gameObject);
-        }
-    }
     public void MoveForward()
     {
         t += Time.deltaTime * speed / totalLength / Bezier.GetSpeedByCoordLength(t, subdivs, ref speedByChordsLengths);
@@ -147,6 +138,7 @@ public class ThreeBezierScript : MonoBehaviour
         Bezier.PrepareCoords(subdivs, P0, P1, P2, ref speedByChordsLengths, ref totalLength);
 
     }
+
     void OnTriggerEnter2D(Collider2D col)
     {
         if (currentMode != RocketLauncher.Mode.loop)
@@ -157,27 +149,26 @@ public class ThreeBezierScript : MonoBehaviour
             {
                 GameManager.Instance.LevelIsLosed();
             }
-
-            if (currentMode == RocketLauncher.Mode.manualAiming)
-            {
-                GameManager.Instance.RocketBackToPool(this);
-                return;
-            }    
             if (currentMode == RocketLauncher.Mode.enemyAI)
             {
-                GameManager.Instance.EnemyRocketBackToPool(this);  
+                GameManager.Instance.EnemyRocketBackToPool(this);
                 return;
             }
-            if (currentMode == RocketLauncher.Mode.armageddon)
+            if (currentMode != RocketLauncher.Mode.rocketGuidance && currentMode != RocketLauncher.Mode.none)
             {
                 GameManager.Instance.RocketBackToPool(this);
                 return;
             }
-            if (currentMode == RocketLauncher.Mode.rocketGuidance)
-            {
-                Destroy(gameObject);
-            }
             Destroy(gameObject);
-        }        
+        }
+    }
+    void OnBecameInvisible()
+    {
+        if (gameObject.activeSelf == true)
+        {
+            if (currentMode == RocketLauncher.Mode.manualAiming || currentMode == RocketLauncher.Mode.tapLaunch)
+                GameManager.Instance.RocketBackToPool(this);
+            else Destroy(gameObject);
+        }
     }
 }
