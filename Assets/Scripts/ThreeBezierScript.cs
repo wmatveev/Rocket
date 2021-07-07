@@ -2,107 +2,173 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using System.Threading;
 //[ExecuteAlways]
 public class ThreeBezierScript : MonoBehaviour
 {
-    [SerializeField] private Transform P0;
-    [SerializeField] private Transform P1;
-    [SerializeField] private Transform P2;
+    [SerializeField] private Vector3 p0;
+    [SerializeField] private Vector3 p1;
+    [SerializeField] private Vector3 p2;
+
+    public Vector3 P0 { get { return p0; } }
+    public Vector3 P1 { get { return p1; } }
+    public Vector3 P2 { get { return p2; } }
 
     [SerializeField] private AnimationCurve health;
 
+    [SerializeField] private int subdivs = 20;
+    public float speed = 0.5f;
     [Range(0, 1)]
-    [SerializeField] private float t;
+    [SerializeField] private float t = 0f;
+    public float T { set { t = T; } get { return t; } }
 
-    private IEnumerator coroutine;
+    public RocketLauncher.Mode currentMode;
+    private LineRenderer lineRenderer;
+    public bool isDrawn = false;
 
-    private float x = 0f;
-    // private int i = 0;
+    public float[] speedByChordsLengths;
+    private float totalLength;
 
-    private void Start() {
+    void Start() 
+    {
+        ResetCoords();
+        lineRenderer = GetComponent<LineRenderer>();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        // x = (float)i / 400;
-        x += Time.deltaTime * 0.5f;
+    void FixedUpdate()
+    {//
+     //if (currentMode == RocketLauncher.Mode.rocketGuidance)
+     //{
+     //    if (P2.gameObject.activeSelf == false)//
+     //    {
+     //        x = 0;
+     //        GameObject newP0 = new GameObject();
+     //        newP0.transform.position = gameObject.transform.position;
+     //        p0 = newP0.transform;
+     //        p1 = p0;
+     //        GameObject P2 = GameManager.Instance.currEnemyRockets.Count > 0 ? GameManager.Instance.currEnemyRockets[0]
+     //        : GameManager.Instance.enemyPlanet;
+     //        this.P2 = P2.transform;
+     //    } //магическое перенаправление
 
-        t = x;
+        //}
+        try
+        {
+            if (isDrawn == false && lineRenderer != null)
+                DrawPath();
+            MoveForward();
+        } 
+        catch
+        {
+            Debug.Log("error");
+            Destroy(gameObject);
+        }
+        if (t >= 1)
+        {    
 
-        transform.position = Bezier.GetThreePoint(P0.position, P1.position, P2.position, t);
-        transform.rotation = Quaternion.LookRotation( new Vector3(0, 0, 1), Bezier.GetFirstDerivativeForThreePoints(P0.position, P1.position, P2.position, t) );
-
-        if( t >= 1 ) {
-            x = 0;
-            RandomP1();
+            if (currentMode == RocketLauncher.Mode.loop)
+            {
+                t = 0;
+                RandomP1();
+            }
+            else Destroy(gameObject);
         }
     }
+    public void MoveForward()
+    {
+        t += Time.deltaTime * speed / totalLength / Bezier.GetSpeedByCoordLength(t, subdivs, ref speedByChordsLengths);
+        t = Mathf.Clamp01(t);
 
-    private int fff()
+        transform.position = Bezier.GetThreePoint(P0, P1, P2, t);
+        transform.rotation = Quaternion.LookRotation(new Vector3(0, 0, 1), 
+            Bezier.GetFirstDerivativeForThreePoints(P0, P1, P2, t));
+    }
+
+    public void RandomP1(float minOffset = 3f, float maxOffset = 7f)
+    {
+        Vector3 testP1position = new Vector3(P0.x + Random.Range(minOffset, maxOffset) * randomPlusMinus(), 
+            P0.y + Random.Range(minOffset, maxOffset) * randomPlusMinus(), 0 );
+        p1 = testP1position;
+        ResetCoords();
+    }
+
+    private int randomPlusMinus()
     {
         return Random.value >= 0.5 ? 1 : -1;
     }
 
-    private void RandomP1()
+    private void DrawPath()
     {
-        Vector3 testP1position = new Vector3( P0.position.x + Random.Range(3f, 7f) * fff(), 
-            P0.position.y + Random.Range(3f, 7f) * fff(), 0 );
-        P1.position = testP1position;
-    }
-
-    private void aaa()
-    {
-        // x += Time.deltaTime * 0.5f;
-        // t = x;
-
-        // transform.position = Bezier.GetThreePoint(P0.position, P1.position, P2.position, t);
-        // transform.rotation = Quaternion.LookRotation( new Vector3(0, 0, 1), Bezier.GetFirstDerivativeForThreePoints(P0.position, P1.position, P2.position, t) );
-
-        StartCoroutine( waiter() );
-    }
-
-    IEnumerator waiter()
-    {
-        // //Rotate 90 deg
-        // transform.Rotate(new Vector3(90, 0, 0), Space.World);
-
-        // Debug.Log("Started Coroutine at timestamp : " + Time.time);
-
-        //Wait for 4 seconds
-        yield return new WaitForSeconds(4);
-
-        // Debug.Log("Finished Coroutine at timestamp : " + Time.time);
-
-
-        // //Rotate 40 deg
-        // transform.Rotate(new Vector3(40, 0, 0), Space.World);
-
-        // //Wait for 2 seconds
-        // yield return new WaitForSeconds(2);
-
-        // //Rotate 20 deg
-        // transform.Rotate(new Vector3(20, 0, 0), Space.World);
-    }
-
-    private void OnDrawGizmos() {
-        int sigmentNumbers     = 40;
-        Vector3 preveousePoint = P0.position;
-
-        for( int i=0; i<sigmentNumbers+1; i++ ) {
+        int sigmentNumbers = 20;
+        lineRenderer.positionCount = sigmentNumbers + 1;
+        Vector3 preveousePoint = P0;
+        for (int i = 0; i < sigmentNumbers + 1; i++)
+        {
             float parameter = (float)i / sigmentNumbers;
-
-            Vector3 point = Bezier.GetThreePoint(P0.position, P1.position, P2.position, parameter);
-
-            Gizmos.DrawSphere(point, 0.5f);
-            // Gizmos.DrawLine(preveousePoint, point);
-
-            Gizmos.color = Color.magenta;
-            // if( i % 2 == 0) Gizmos.color = Color.clear;
-            // else Gizmos.color = Color.red;
-
+            Vector3 point = Bezier.GetThreePoint(P0, P1, P2, parameter);
+            point.z = 1;
+            lineRenderer.SetPosition(i, point);
             preveousePoint = point;
         }
+        isDrawn = true;
     }
 
+    public void SetPoints(Vector3 P0, Vector3 P1, Vector3 P2)
+    {
+        this.p0 = P0;
+        this.p1 = P1;
+        this.p2 = P2;
+        ResetCoords();
+    }
+
+    public void SetPointP1(Vector3 P1)
+    {
+        this.p1 = P1;
+        ResetCoords();
+    }
+
+    public void SetPointP2(Vector3 P2)
+    {
+        this.p2 = P2;
+        ResetCoords();
+    }    
+    
+    public void ResetCoords()
+    {
+        Bezier.PrepareCoords(subdivs, P0, P1, P2, ref speedByChordsLengths, ref totalLength);
+
+    }
+
+    void OnTriggerEnter2D(Collider2D col)
+    {
+        if (currentMode != RocketLauncher.Mode.loop)
+        {
+            if (col.gameObject.layer == gameObject.layer)
+                return;
+            if (col.gameObject.tag == "HomePlanet")
+            {
+                GameManager.Instance.LevelIsLosed();
+            }
+            if (currentMode == RocketLauncher.Mode.enemyAI)
+            {
+                GameManager.Instance.EnemyRocketBackToPool(this);
+                return;
+            }
+            if (currentMode != RocketLauncher.Mode.rocketGuidance && currentMode != RocketLauncher.Mode.none)
+            {
+                GameManager.Instance.RocketBackToPool(this);
+                return;
+            }
+            Destroy(gameObject);
+        }
+    }
+    void OnBecameInvisible()
+    {
+        if (gameObject.activeSelf == true)
+        {
+            if (currentMode == RocketLauncher.Mode.manualAiming || currentMode == RocketLauncher.Mode.tapLaunch)
+                GameManager.Instance.RocketBackToPool(this);
+            else Destroy(gameObject);
+        }
+    }
 }
