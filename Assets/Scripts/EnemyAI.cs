@@ -24,6 +24,10 @@ public class EnemyAI : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance.amountOfERocketsOnLevel == 0)
+        {
+            GameManager.Instance.LevelIsCompleted();
+        }
         cooldown += Time.deltaTime;
         if (GameManager.Instance.EnemyCanShoot() && cooldown > timeToReload)
             Shoot();
@@ -31,10 +35,6 @@ public class EnemyAI : MonoBehaviour
 
     private void Shoot()
     {       
-        if (GameManager.Instance.amountOfERocketsOnLevel == 0)
-        {
-            GameManager.Instance.LevelIsCompleted();
-        }
 
         ThreeBezierScript bezier = GameManager.Instance.GetEnemyRocketFromPool();
 

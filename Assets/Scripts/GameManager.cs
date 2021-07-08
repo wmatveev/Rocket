@@ -44,6 +44,7 @@ public class GameManager : MonoBehaviour
         createRocketPool("Rocket", amountOfPlayerRockets + 40);
         createRocketPool("EnemyRocket", amountOfERocketsOnLevel);        
     }
+
     #region LevelSettings
     [HideInInspector]
     public int amountOfERocketsOnLevel = 0, //how many rockets we need to destroy to win
@@ -146,7 +147,7 @@ public class GameManager : MonoBehaviour
 
     public bool EnemyCanShoot()
     {
-        return launchedERockets < eRocketsToLaunch;
+        return launchedERockets < eRocketsToLaunch && amountOfERocketsOnLevel - launchedERockets > 0;
     }
     #endregion
 
@@ -154,7 +155,7 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 0;
         Text text = winPanel.transform.Find("Score").gameObject.GetComponent<Text>();
-        text.text += " " + score;
+        text.text = "Score: " + score;
         winPanel.SetActive(true);
     }
     
