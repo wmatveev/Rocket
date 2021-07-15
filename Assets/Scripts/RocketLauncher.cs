@@ -121,16 +121,9 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             clickPoint = Camera.main.ScreenToWorldPoint(eventData.position);
             clickPoint = new Vector2(clickPoint.x - clickOffset.x, clickPoint.y - clickOffset.y);
             //Ray ray = new Ray(launchPoint.position, new Vector2(launchPoint.position.x, launchPoint.position.y) - clickPoint);
-            Vector2 destination = new Vector2();
-            if (offset == 0)
-            {
-                destination = clickPoint;
-            }
-            else
-            {
-                Ray ray = new Ray(launchPoint.position, clickPoint - new Vector2(launchPoint.position.x, launchPoint.position.y));
-                destination = ray.GetPoint(offset * 3);
-            }
+            Vector2 destination = new Vector2();            
+            Ray ray = new Ray(launchPoint.position, clickPoint - new Vector2(launchPoint.position.x, launchPoint.position.y));
+            destination = ray.GetPoint(Vector3.Distance(launchPoint.position, clickPoint) + offset);
             //lineRenderer.SetPosition(0, new Vector3(clickPoint.x, clickPoint.y, 2));
             //lineRenderer.SetPosition(1, new Vector3(destination.x, destination.y, 2));
             lineRenderer.SetPosition(0, new Vector3(launchPoint.position.x, launchPoint.position.y, 2));

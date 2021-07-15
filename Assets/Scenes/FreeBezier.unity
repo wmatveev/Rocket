@@ -1711,7 +1711,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   subdivs: 40
-  speed: 1
+  speed: 3
   t: 0
   currentMode: 1
   isDrawn: 0

@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 using Firebase;
 using Firebase.Analytics;
+using Firebase.Extensions;
 public class GameManager : MonoBehaviour
 {
     #region Singleton
@@ -24,6 +25,9 @@ public class GameManager : MonoBehaviour
 
     [HideInInspector] public int currentLevel;
     [HideInInspector] public int score = 0;
+
+    //firebase info
+    DependencyStatus dependencyStatus = DependencyStatus.UnavailableOther;
     private void Awake()
     {
         Instance = this;
@@ -42,6 +46,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        StartFirebase();
         SetLevelSettings();
 
         createRocketPool("Rocket", amountOfSelfGuidedRockets + amountOfPlayerRockets + 5);
@@ -70,6 +75,49 @@ public class GameManager : MonoBehaviour
         eRocketsToLaunch = (currentLevel / 5) + 1; 
         speedCoef = 1f + (currentLevel % 5)/ 10f;
         EnemyAI.Instance.timeToReload = (currentLevel < 5) ? 0 : (float)(1f + Random.value);
+    }
+    #endregion
+
+    #region Firebase
+    private void StartFirebase()
+    {
+        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task => {
+            dependencyStatus = task.Result;
+            if (dependencyStatus == DependencyStatus.Available)
+            {
+                InitializeFirebase();
+            }
+            else
+                Debug.LogError("Firebase analytics failed: " + dependencyStatus);
+        });
+    }
+
+    void InitializeFirebase()
+    {
+        //Enabling data collection
+        FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
+        
+        //We can add it later:
+        //Set the user's sign up method
+        //FirebaseAnalytics.SetUserProperty(FirebaseAnalytics.UserPropertySignUpMethod, "Google");
+        //Set the user ID
+        //FirebaseAnalytics.SetUserId("uber_user_510");
+    }
+
+    private void EndlevelAnalytics()
+    {
+        float winRate;
+        if (!PlayerPrefs.HasKey("LosingOnThisLevel"))
+            winRate = 1f;
+        else winRate = 1f / (1f + (float)PlayerPrefs.GetInt("LosingOnThisLevel"));
+
+        string param = "winRateOnLevel" + currentLevel.ToString();
+
+        FirebaseAnalytics.LogEvent(FirebaseAnalytics.EventLevelEnd,
+            new Parameter(FirebaseAnalytics.ParameterLevel, currentLevel),
+            new Parameter(param, winRate));
+
+        FirebaseAnalytics.LogEvent(FirebaseAnalytics.EventPostScore, FirebaseAnalytics.ParameterScore, score);
     }
     #endregion
 
@@ -172,7 +220,7 @@ public class GameManager : MonoBehaviour
    public void LevelIsCompleted()
     {
         Time.timeScale = 0;
-        SentEndlevelAnalytics();
+        EndlevelAnalytics();
         Text text = winPanel.transform.Find("Score").gameObject.GetComponent<Text>();
         text.text = "Score: " + score;
         winPanel.SetActive(true);
@@ -187,21 +235,5 @@ public class GameManager : MonoBehaviour
 
         Time.timeScale = 0;
         losePanel.SetActive(true);
-    }
-
-    private void SentEndlevelAnalytics()
-    {
-        float winRate;
-        if (!PlayerPrefs.HasKey("LosingOnThisLevel"))
-            winRate = 1f;
-        else winRate = 1f / (1f + (float)PlayerPrefs.GetInt("LosingOnThisLevel"));
-
-        string param = "winRateOnLevel" + currentLevel.ToString();
-
-        FirebaseAnalytics.LogEvent(FirebaseAnalytics.EventLevelEnd,
-            new Parameter(FirebaseAnalytics.ParameterLevel, currentLevel), 
-            new Parameter(param, winRate));
-
-        FirebaseAnalytics.LogEvent(FirebaseAnalytics.EventPostScore, FirebaseAnalytics.ParameterScore, score);
     }
 }

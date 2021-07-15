@@ -16,12 +16,6 @@ public class EnemyAI : MonoBehaviour
         Sprite sprite = (Sprite)sprites[Random.Range(0, sprites.Length)];
         gameObject.GetComponent<SpriteRenderer>().sprite = sprite;
     }
-
-    void Start()
-    {
-        
-    }
-
     void Update()
     {
         if (GameManager.Instance.amountOfERocketsOnLevel == 0)
@@ -38,7 +32,7 @@ public class EnemyAI : MonoBehaviour
         ThreeBezierScript bezier = GameManager.Instance.GetEnemyRocketFromPool();
 
         bezier.SetPoints(GameManager.Instance.enemyPlanet.transform.position, new Vector3(), GameManager.Instance.homePlanet.transform.position);
-        bezier.RandomP1();
+        bezier.RandomP1(8f, 10f);
         bezier.currentMode = RocketLauncher.Mode.enemyAI;
         cooldown = 0f;
     }
