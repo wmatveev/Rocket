@@ -11,19 +11,31 @@ public class UIMenu : MonoBehaviour
     public static UIMenu Instance { get; private set; }
     #endregion
 
-    [SerializeField] public Text levelLable;
-    [SerializeField] public Text scoreLable;
+    [SerializeField] private Text levelLable;
+    [SerializeField] private Text scoreLable;
+
+    [SerializeField] private Text amountOfSelfGuidedRockets;
+    [SerializeField] private Text amountOfPlayerRockets;
     private void Start()
     {
         Instance = this;
 
         levelLable.text += GameManager.Instance.currentLevel;
         scoreLable.text += GameManager.Instance.score;
+
+        SetRocketsAmount();
     }
 
     public void SetScore()
     {
         scoreLable.text = "Score: " + GameManager.Instance.score;
+    }
+
+    public void SetRocketsAmount()
+    {
+        amountOfSelfGuidedRockets.text = GameManager.Instance.amountOfSelfGuidedRockets.ToString();
+        amountOfPlayerRockets.text = GameManager.Instance.amountOfPlayerRockets.ToString();
+
     }
     public void ReloadScene()
     {

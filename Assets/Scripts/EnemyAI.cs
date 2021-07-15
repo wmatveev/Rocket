@@ -35,7 +35,6 @@ public class EnemyAI : MonoBehaviour
 
     private void Shoot()
     {       
-
         ThreeBezierScript bezier = GameManager.Instance.GetEnemyRocketFromPool();
 
         bezier.SetPoints(GameManager.Instance.enemyPlanet.transform.position, new Vector3(), GameManager.Instance.homePlanet.transform.position);

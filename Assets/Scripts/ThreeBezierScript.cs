@@ -22,7 +22,7 @@ public class ThreeBezierScript : MonoBehaviour
     [SerializeField] private float t = 0f;
     public float T { set { t = T; } get { return t; } }
 
-    public RocketLauncher.Mode currentMode;
+    [HideInInspector] public RocketLauncher.Mode currentMode;
     private LineRenderer lineRenderer;
     public bool isDrawn = false;
 
@@ -64,8 +64,7 @@ public class ThreeBezierScript : MonoBehaviour
             Destroy(gameObject);
         }
         if (t >= 1)
-        {    
-
+        {
             if (currentMode == RocketLauncher.Mode.loop)
             {
                 t = 0;

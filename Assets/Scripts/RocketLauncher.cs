@@ -6,14 +6,12 @@ using UnityEngine.UI;
 
 public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
-    //UI element
-    public Text amountOfPlayerRockets;
     #region Singleton
     public static RocketLauncher Instance { get; private set; }
     #endregion
     //offset is used to draw aim line straight up for a sertain distances
     [SerializeField] private float offset = 3f;
-    private float currentOffset = 0f;
+    private float defaultOffset = 0f;
     //clickOffset is used to draw aim line straight down independently of start tap position
     private Vector2 clickOffset = new Vector2(),
                     clickPoint = new Vector2();
@@ -51,7 +49,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         currentMode = Mode.tapLaunch;
         lastAimMode = currentMode;
 
-        amountOfPlayerRockets.text = GameManager.Instance.amountOfPlayerRockets.ToString();
+        defaultOffset = offset;
         launchPoint = GameManager.Instance.homePlanet.transform;
         clickPoint = launchPoint.position;
         lineRenderer.SetPosition(0, new Vector3(0, 0, 2));
@@ -62,31 +60,34 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     }
 
     private float cooldown = 0f, timeToReload = 0.5f;
-    //void FixedUpdate()
-    //{
-    //    cooldown += Time.deltaTime;
-    //    if (cooldown > timeToReload)
-    //    {
-    //        cooldown = 0f;
-    //        AutoGunRocketLaunch();
-    //    }
-    //}
+    void FixedUpdate()
+    {
+        cooldown += Time.deltaTime;
+        //if (cooldown > timeToReload)
+        //{
+        //    cooldown = 0f;
+        //    //AutoGunRocketLaunch();
+        //}
+    }
 
+    private bool CanShoot()
+    {
+        return cooldown >= timeToReload;
+    }
     public virtual void OnPointerDown(PointerEventData eventData)
     {
-        results.Clear();
-        raycaster.Raycast(eventData, results);
-        foreach (RaycastResult result in results)
-        {
-            if (result.gameObject.transform.tag == "AutoGun")
-            {
-                isDraged = true;
-                OnDrag(eventData);
-                break;
-            }
-        }
+        //results.Clear();
+        //raycaster.Raycast(eventData, results);
+        //foreach (RaycastResult result in results)
+        //{
+        //    if (result.gameObject.transform.tag == "AutoGun")
+        //    {
+        //        isDraged = true;
+        //        OnDrag(eventData);
+        //        break;
+        //    }
+        //}
 
-        currentOffset = offset;
         if (currentMode == Mode.tapLaunch)
         {
             Vector2 aimPosition = Camera.main.ScreenToWorldPoint(eventData.position);
@@ -98,10 +99,10 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         }
         if (currentMode == Mode.manualAiming)
         {
-            clickPoint = launchPoint.position;
-            clickPoint.y -= currentOffset;
-            clickOffset = Camera.main.ScreenToWorldPoint(eventData.position);
-            clickOffset = new Vector2(clickOffset.x - clickPoint.x, clickOffset.y - clickPoint.y);
+            //clickPoint = launchPoint.position;
+            //clickPoint.y -= currentOffset;
+            //clickOffset = Camera.main.ScreenToWorldPoint(eventData.position);
+            //clickOffset = new Vector2(clickOffset.x - clickPoint.x, clickOffset.y - clickPoint.y);
             OnDrag(eventData);
         }
     }
@@ -119,9 +120,20 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         {
             clickPoint = Camera.main.ScreenToWorldPoint(eventData.position);
             clickPoint = new Vector2(clickPoint.x - clickOffset.x, clickPoint.y - clickOffset.y);
-            Ray ray = new Ray(launchPoint.position, new Vector2(launchPoint.position.x, launchPoint.position.y) - clickPoint);
-            Vector2 destination = ray.GetPoint(offset * 100);
-            lineRenderer.SetPosition(0, new Vector3(clickPoint.x, clickPoint.y, 2));
+            //Ray ray = new Ray(launchPoint.position, new Vector2(launchPoint.position.x, launchPoint.position.y) - clickPoint);
+            Vector2 destination = new Vector2();
+            if (offset == 0)
+            {
+                destination = clickPoint;
+            }
+            else
+            {
+                Ray ray = new Ray(launchPoint.position, clickPoint - new Vector2(launchPoint.position.x, launchPoint.position.y));
+                destination = ray.GetPoint(offset * 3);
+            }
+            //lineRenderer.SetPosition(0, new Vector3(clickPoint.x, clickPoint.y, 2));
+            //lineRenderer.SetPosition(1, new Vector3(destination.x, destination.y, 2));
+            lineRenderer.SetPosition(0, new Vector3(launchPoint.position.x, launchPoint.position.y, 2));
             lineRenderer.SetPosition(1, new Vector3(destination.x, destination.y, 2));
         }
 
@@ -136,12 +148,12 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (currentMode == Mode.manualAiming || currentMode == Mode.tapLaunch)
+        if (CanShoot() && (currentMode == Mode.manualAiming || currentMode == Mode.tapLaunch))
             RocketLaunch();
 
         lineRenderer.SetPosition(0, new Vector3(0, 0, 2));
         lineRenderer.SetPosition(1, new Vector3(0, 0, 2));
-        currentOffset = 0f;
+        //currentOffset = 0f;
         clickPoint = launchPoint.position;
         isDraged = false;
         aim.SetActive(false);
@@ -150,9 +162,8 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     private void RocketLaunch()
     {
         ThreeBezierScript bezier = GameManager.Instance.GetRocketFromPool(currentMode);
+        bezier.currentMode = currentMode;
 
-        if (currentMode == Mode.none)
-            Destroy(gameObject);
         if (currentMode == Mode.rocketGuidance || currentMode == Mode.armageddon)
         {
             if (GameManager.Instance.currEnemyRockets.Count > 0)
@@ -160,7 +171,6 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
                 ThreeBezierScript target = GameManager.Instance.currEnemyRockets[armageddonCounter];
                 bezier.SetPoints(target.P2, target.P1, target.P0);
                 //GameManager.Instance.currEnemyRockets.RemoveAt(0);
-                amountOfPlayerRockets.text = GameManager.Instance.amountOfPlayerRockets.ToString();
             }
             else GameManager.Instance.RocketBackToPool(bezier);
         }
@@ -168,8 +178,31 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         {
             SetPoints(bezier);
         }
+        cooldown = 0f;
     }
 
+    
+    private void SetPoints(ThreeBezierScript bezier)
+    {
+        bezier.SetPointP1(new Vector3());
+        if (currentMode == Mode.manualAiming)
+        {
+            Ray ray = new Ray(launchPoint.position, clickPoint - new Vector2(launchPoint.position.x, launchPoint.position.y));//new Vector2(launchPoint.position.x, launchPoint.position.y) - clickPoint);
+            Vector2 P3 = new Vector2();
+            if (offset == 0)
+                P3 = ray.GetPoint(300);
+            else
+                P3 = ray.GetPoint(offset * 100);
+
+            bezier.SetPoints(launchPoint.position, clickPoint, P3);//ray.GetPoint(offset), ray.GetPoint(offset * 100));
+        }
+        if (currentMode == Mode.tapLaunch)
+        {
+            //Ray ray = new Ray(launchPoint.position, clickPoint - new Vector2(launchPoint.position.x, launchPoint.position.y));
+            bezier.SetPoints(launchPoint.position, clickPoint, clickPoint);//ray.GetPoint(currentOffset * 100)); 
+        }
+    }
+    
     private void AutoGunRocketLaunch()
     {
         ThreeBezierScript bezier = GameManager.Instance.GetRocketFromPool(currentMode);
@@ -179,21 +212,12 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         bezier.SetPoints(autoGun.transform.position, ray.GetPoint(offset * 10), ray.GetPoint(offset * 100));
     }
 
-    private void SetPoints(ThreeBezierScript bezier)
-    {
-        bezier.SetPointP1(new Vector3());
-        if (currentMode == Mode.manualAiming)
-        {
-            Ray ray = new Ray(launchPoint.position, new Vector2(launchPoint.position.x, launchPoint.position.y) - clickPoint);
-            bezier.SetPoints(launchPoint.position, ray.GetPoint(currentOffset), ray.GetPoint(currentOffset * 100));
-        }
-        if (currentMode == Mode.tapLaunch)
-        {
-            Ray ray = new Ray(launchPoint.position, clickPoint - new Vector2(launchPoint.position.x, launchPoint.position.y));
-            bezier.SetPoints(launchPoint.position, clickPoint, ray.GetPoint(currentOffset * 100)); 
-        }
-    }
-
+    //private IEnumerator Reload()
+    //{
+    //    isReloaded = true;
+    //    yield return new WaitForSeconds(reloadTime);
+    //    isReloaded = false;
+    //}
     public void changeAimMode()
     {
         if (currentMode == Mode.manualAiming)
@@ -203,11 +227,18 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     }
     public void changeModeToManualAiming()
     {
+        if (offset == defaultOffset)
+        {
+            offset = 0f;
+        }
+        else
+            offset = defaultOffset;
         currentMode = Mode.manualAiming;
     }
 
     public void changeModeToTapLaunch()
     {
+        offset = defaultOffset;
         currentMode = Mode.tapLaunch;
     }
 
