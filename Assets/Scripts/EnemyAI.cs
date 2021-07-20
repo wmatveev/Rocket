@@ -32,8 +32,9 @@ public class EnemyAI : MonoBehaviour
         ThreeBezierScript bezier = GameManager.Instance.GetEnemyRocketFromPool();
 
         bezier.SetPoints(GameManager.Instance.enemyPlanet.transform.position, new Vector3(), GameManager.Instance.homePlanet.transform.position);
-        bezier.RandomP1(8f, 10f);
         bezier.currentMode = RocketLauncher.Mode.enemyAI;
+        //bezier.RandomP1(8f, 10f);
+        bezier.RandomP1(1f, 9f);
         cooldown = 0f;
     }
 }

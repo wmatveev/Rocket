@@ -75,7 +75,8 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         return cooldown >= timeToReload;
     }
     public virtual void OnPointerDown(PointerEventData eventData)
-    {
+    { 
+        //This code was used to move auto gun
         //results.Clear();
         //raycaster.Raycast(eventData, results);
         //foreach (RaycastResult result in results)
