@@ -16,14 +16,12 @@ public class EnemyAI : MonoBehaviour
         Sprite sprite = (Sprite)sprites[Random.Range(0, sprites.Length)];
         gameObject.GetComponent<SpriteRenderer>().sprite = sprite;
     }
-
-    void Start()
-    {
-        
-    }
-
     void Update()
     {
+        if (GameManager.Instance.amountOfERocketsOnLevel == 0)
+        {
+            GameManager.Instance.LevelIsCompleted();
+        }
         cooldown += Time.deltaTime;
         if (GameManager.Instance.EnemyCanShoot() && cooldown > timeToReload)
             Shoot();
@@ -31,16 +29,12 @@ public class EnemyAI : MonoBehaviour
 
     private void Shoot()
     {       
-        if (GameManager.Instance.amountOfERocketsOnLevel == 0)
-        {
-            GameManager.Instance.LevelIsCompleted();
-        }
-
         ThreeBezierScript bezier = GameManager.Instance.GetEnemyRocketFromPool();
 
         bezier.SetPoints(GameManager.Instance.enemyPlanet.transform.position, new Vector3(), GameManager.Instance.homePlanet.transform.position);
-        bezier.RandomP1();
         bezier.currentMode = RocketLauncher.Mode.enemyAI;
+        //bezier.RandomP1(8f, 10f);
+        bezier.RandomP1(1f, 9f);
         cooldown = 0f;
     }
 }

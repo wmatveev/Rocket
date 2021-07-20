@@ -54,7 +54,49 @@ public static class Bezier
             6f * oneMinusT * t * (p2 - p1) +
             3f * Mathf.Pow(t, 2) * (p3 - p2);
     }
-    //перенести?
+    /// <summary>
+    /// This function represents a spiral movement around a quadratic bezier curve
+    /// look wp-9
+    /// </summary>
+    /// <param name="p0">First control point</param>
+    /// <param name="p1">Second control point</param>
+    /// <param name="p2">Third control point</param>
+    /// <param name="t">Parameter for the bezier curve</param>
+    /// <param name="t_ellipse">Parameter for the ellipse equation (radian)</param>
+    /// <param name="a">Semi-major axis </param>
+    /// <param name="b">Semi-minor axis</param>
+    /// <returns>Point on the spiral around a quadratic bezier curve</returns>
+    public static Vector3 SpiralThreePointBezier(Vector3 p0, Vector3 p1, Vector3 p2, float t, float t_ellipse, float a, float b)
+    {
+        Vector3 bezier_coords = GetThreePoint(p0, p1, p2, t);
+        float y = bezier_coords.y;
+        float x = p0.x + a * Mathf.Cos(t_ellipse) + bezier_coords.x - a;
+        float z = p0.z + b * Mathf.Sin(t_ellipse);
+        return new Vector3(x, y, z);
+    }
+    /// <summary>
+    /// This function represents a spiral movement around a linear  bezier curve
+    /// All params are the same as for the function above 
+    /// </summary>
+    /// <param name="p0">First control point</param>
+    /// <param name="p2">Second control point</param>
+    /// <param name="t">Parameter for the bezier curve</param>
+    /// <param name="t_ellipse">Parameter for the ellipse equation (radian)</param>
+    /// <param name="a">Semi-major axis</param>
+    /// <param name="b">Semi-minor axis</param>
+    /// <returns>Point on the spiral around a linear bezier curve</returns>
+    public static Vector3 SimpleSpiral(Vector3 p0, Vector3 p2, float t, float t_ellipse, float a, float b)
+    {
+        Vector2 bezier_coords = GetTwoPoint(p0, p2, t);
+        float y = bezier_coords.y;
+        float x = p0.x + a * Mathf.Cos(t_ellipse) - a;
+        Debug.Log(p0.z);
+        float z = p0.z + b * Mathf.Sin(t_ellipse);
+        Debug.Log(z);
+
+        Debug.Log(new Vector3(x, y, z));
+        return new Vector3(x, y, z);
+    }
     public static void PrepareCoords(int subdivs, Vector3 P0, Vector3 P1, Vector3 P2, ref float[] speedByChordsLengths, ref float totalLength)
     {
         speedByChordsLengths = new float[subdivs];

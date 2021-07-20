@@ -4,6 +4,9 @@ using System.Collections.Specialized;
 using UnityEngine;
 using UnityEngine.UI;
 
+using Firebase;
+using Firebase.Analytics;
+using Firebase.Extensions;
 public class GameManager : MonoBehaviour
 {
     #region Singleton
@@ -17,10 +20,11 @@ public class GameManager : MonoBehaviour
     [HideInInspector] public GameObject losePanel, winPanel;
     [HideInInspector] public GameObject homePlanet, enemyPlanet;
    
-    public int amountOfPlayerRockets;
+    public int amountOfSelfGuidedRockets;
 
     [HideInInspector] public int currentLevel;
     [HideInInspector] public int score = 0;
+
     private void Awake()
     {
         Instance = this;
@@ -39,16 +43,52 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        SetScreenEdges();
         SetLevelSettings();
+        StartFirebase();
 
-        createRocketPool("Rocket", amountOfPlayerRockets + 40);
+        createRocketPool("Rocket", amountOfSelfGuidedRockets + amountOfPlayerRockets + 5);
         createRocketPool("EnemyRocket", amountOfERocketsOnLevel);        
+    }
+    [SerializeField]
+    private float distance;
+    private void OnDrawGizmos()
+    {
+        Vector3 p1 = Camera.main.ScreenToWorldPoint(new Vector3(0f, 0f, distance));
+        Vector3 p2 = Camera.main.ScreenToWorldPoint(new Vector3(0f, Camera.main.pixelHeight, distance));
+        Vector3 p3 = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth, Camera.main.pixelHeight, distance));
+        Vector3 p4 = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth, 0f, distance));
+        Gizmos.DrawLine(p1, p2);
+        Gizmos.DrawLine(p2, p3);
+        Gizmos.DrawLine(p3, p4);
+        Gizmos.DrawLine(p4, p1);
+    }
+    public Vector2 minScreenEdge, maxScreenEdge;
+    private void SetScreenEdges()
+    {
+        Vector3 bottomLeft, bottomRight, topLeft, topRight;
+        bottomLeft = Camera.main.ScreenToWorldPoint(new Vector3(0f, 0f, distance));
+        //topLeft = Camera.main.ScreenToWorldPoint(new Vector3(0f, Camera.main.pixelHeight, distance));
+        topRight = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth, Camera.main.pixelHeight, distance));
+        //bottomRight = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth, 0f, distance));
+
+        minScreenEdge = new Vector2(bottomLeft.x, bottomLeft.y);
+        maxScreenEdge = new Vector2(topRight.x, topRight.y);
+    }
+
+    public bool IsOnTheScreen(Vector3 position)
+    {
+        if (minScreenEdge.x < position.x && position.x < maxScreenEdge.x &&
+            minScreenEdge.y < position.y && position.y < maxScreenEdge.y)
+            return true;
+        return false;
     }
     #region LevelSettings
     [HideInInspector]
     public int amountOfERocketsOnLevel = 0, //how many rockets we need to destroy to win
         eRocketsToLaunch = 0, //allowed number enemy rockets at the same time on level
-        launchedERockets = 0; //counter of launched rockets
+        launchedERockets = 0, //counter of launched rockets
+        amountOfPlayerRockets;
     private float speedCoef;
     private void SetCurrentLevel()
     {
@@ -63,9 +103,57 @@ public class GameManager : MonoBehaviour
     private void SetLevelSettings()
     {
         amountOfERocketsOnLevel = 3 + currentLevel;
+        amountOfPlayerRockets = (int)(amountOfERocketsOnLevel * 1.2f) + 4;
         eRocketsToLaunch = (currentLevel / 5) + 1; 
         speedCoef = 1f + (currentLevel % 5)/ 10f;
         EnemyAI.Instance.timeToReload = (currentLevel < 5) ? 0 : (float)(1f + Random.value);
+    }
+    #endregion
+
+    #region Firebase
+    //firebase info
+    DependencyStatus dependencyStatus = DependencyStatus.UnavailableOther;
+    private void StartFirebase()
+    {
+        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task => {
+            dependencyStatus = task.Result;
+            if (dependencyStatus == DependencyStatus.Available)
+            {
+                InitializeFirebase();
+            }
+            else
+                Debug.LogError("Firebase analytics failed: " + dependencyStatus);
+        });
+    }
+
+    void InitializeFirebase()
+    {
+        //Enabling data collection
+        FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
+        
+        //We can add it later:
+        //Set the user's sign up method
+        //FirebaseAnalytics.SetUserProperty(FirebaseAnalytics.UserPropertySignUpMethod, "Google");
+        //Set the user ID
+        //FirebaseAnalytics.SetUserId("uber_user_510");
+    }
+
+    private void EndlevelAnalytics()
+    {
+        float winRate;
+        if (!PlayerPrefs.HasKey("LosingOnThisLevel"))
+            winRate = 1f;
+        else
+        {
+            winRate = 1f / (1f + (float)PlayerPrefs.GetInt("LosingOnThisLevel"));
+            PlayerPrefs.DeleteKey("LosingOnThisLevel");
+        }
+
+        string param = "winRateOnLevel" + currentLevel.ToString();
+
+        FirebaseAnalytics.LogEvent(FirebaseAnalytics.EventLevelEnd, FirebaseAnalytics.ParameterLevel, currentLevel);
+        FirebaseAnalytics.LogEvent("winrate", param, winRate);
+        FirebaseAnalytics.LogEvent(FirebaseAnalytics.EventPostScore, FirebaseAnalytics.ParameterScore, score);
     }
     #endregion
 
@@ -80,8 +168,12 @@ public class GameManager : MonoBehaviour
             var tmp_rocket = Instantiate(rocket, rocketsPoolObj.transform); 
             if (type == "Rocket")
                 playerRocketsPool.Add(tmp_rocket.GetComponent<ThreeBezierScript>());
-            if (type == "EnemyRocket") 
-                enemyRocketsPool.Add(tmp_rocket.GetComponent<ThreeBezierScript>());
+            if (type == "EnemyRocket")
+            {
+                ThreeBezierScript erocket = tmp_rocket.GetComponent<ThreeBezierScript>();
+                erocket.speed *= speedCoef;
+                enemyRocketsPool.Add(erocket);
+            }
             tmp_rocket.SetActive(false);
         }
         Destroy(rocket);
@@ -90,18 +182,30 @@ public class GameManager : MonoBehaviour
     public ThreeBezierScript GetRocketFromPool(RocketLauncher.Mode mode)
     {
         ThreeBezierScript rocketTmp = new ThreeBezierScript();
-        if (mode != RocketLauncher.Mode.rocketGuidance || (amountOfPlayerRockets > 0)) 
+        if (CanGetRocket(mode)) 
         {
             rocketTmp = playerRocketsPool[0];
             playerRocketsPool.Remove(rocketTmp);
             rocketTmp.gameObject.SetActive(true);
             rocketTmp.gameObject.transform.parent = null;
-            if (mode == RocketLauncher.Mode.rocketGuidance)
-                amountOfPlayerRockets--;
         }
+        UIMenu.Instance.SetRocketsAmount();
         return rocketTmp;
     }
-
+    private bool CanGetRocket(RocketLauncher.Mode mode)
+    {
+        if (mode == RocketLauncher.Mode.rocketGuidance && (amountOfSelfGuidedRockets > 0))
+        {
+            amountOfSelfGuidedRockets--;
+            return true;
+        }
+        if ((mode == RocketLauncher.Mode.manualAiming || mode == RocketLauncher.Mode.tapLaunch) && amountOfPlayerRockets > 0)
+        {
+            amountOfPlayerRockets--;
+            return true;
+        }
+        return false;
+    }
     public void RocketBackToPool(ThreeBezierScript rocket)
     {
         rocket.gameObject.transform.SetParent(playerRocketsPool[0].gameObject.transform.parent);
@@ -120,7 +224,6 @@ public class GameManager : MonoBehaviour
             rocketTmp.gameObject.gameObject.SetActive(true);
             enemyRocketsPool.Remove(rocketTmp);
             rocketTmp.gameObject.transform.parent = null;
-            rocketTmp.speed *= speedCoef;
             rocketTmp.isDrawn = false;
             currEnemyRockets.Add(rocketTmp);
             launchedERockets++;
@@ -146,20 +249,26 @@ public class GameManager : MonoBehaviour
 
     public bool EnemyCanShoot()
     {
-        return launchedERockets < eRocketsToLaunch;
+        return launchedERockets < eRocketsToLaunch && amountOfERocketsOnLevel - launchedERockets > 0;
     }
     #endregion
 
    public void LevelIsCompleted()
     {
         Time.timeScale = 0;
+        EndlevelAnalytics();
         Text text = winPanel.transform.Find("Score").gameObject.GetComponent<Text>();
-        text.text += " " + score;
+        text.text = "Score: " + score;
         winPanel.SetActive(true);
     }
     
     public void LevelIsLosed()
     {
+        if (PlayerPrefs.HasKey("LosingOnThisLevel"))
+            PlayerPrefs.SetInt("LosingOnThisLevel", PlayerPrefs.GetInt("LosingOnThisLevel") + 1);
+        else
+            PlayerPrefs.SetInt("LosingOnThisLevel", 1);
+
         Time.timeScale = 0;
         losePanel.SetActive(true);
     }

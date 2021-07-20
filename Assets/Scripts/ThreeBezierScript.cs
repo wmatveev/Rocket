@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using System.Threading;
 //[ExecuteAlways]
 public class ThreeBezierScript : MonoBehaviour
 {
@@ -22,7 +21,7 @@ public class ThreeBezierScript : MonoBehaviour
     [SerializeField] private float t = 0f;
     public float T { set { t = T; } get { return t; } }
 
-    public RocketLauncher.Mode currentMode;
+    [HideInInspector] public RocketLauncher.Mode currentMode;
     private LineRenderer lineRenderer;
     public bool isDrawn = false;
 
@@ -36,22 +35,7 @@ public class ThreeBezierScript : MonoBehaviour
     }
 
     void FixedUpdate()
-    {//
-     //if (currentMode == RocketLauncher.Mode.rocketGuidance)
-     //{
-     //    if (P2.gameObject.activeSelf == false)//
-     //    {
-     //        x = 0;
-     //        GameObject newP0 = new GameObject();
-     //        newP0.transform.position = gameObject.transform.position;
-     //        p0 = newP0.transform;
-     //        p1 = p0;
-     //        GameObject P2 = GameManager.Instance.currEnemyRockets.Count > 0 ? GameManager.Instance.currEnemyRockets[0]
-     //        : GameManager.Instance.enemyPlanet;
-     //        this.P2 = P2.transform;
-     //    } //магическое перенаправление
-
-        //}
+    {
         try
         {
             if (isDrawn == false && lineRenderer != null)
@@ -64,8 +48,7 @@ public class ThreeBezierScript : MonoBehaviour
             Destroy(gameObject);
         }
         if (t >= 1)
-        {    
-
+        {
             if (currentMode == RocketLauncher.Mode.loop)
             {
                 t = 0;
@@ -74,22 +57,59 @@ public class ThreeBezierScript : MonoBehaviour
             else Destroy(gameObject);
         }
     }
+    //For spiral
+    //float t_ellipse = 0;
+    //public float a, b, t_speed;
     public void MoveForward()
     {
-        t += Time.deltaTime * speed / totalLength / Bezier.GetSpeedByCoordLength(t, subdivs, ref speedByChordsLengths);
-        t = Mathf.Clamp01(t);
+        if (currentMode == RocketLauncher.Mode.enemyAI)
+        {
+            t += Time.deltaTime * speed;
+            transform.position = Bezier.GetTwoPoint(P0, P2, t);
+            transform.rotation = Quaternion.LookRotation(new Vector3(0, 0, 1),
+                Bezier.GetFirstDerivativeForThreePoints(P0, P1, P2, t));
+            if (!GameManager.Instance.IsOnTheScreen(transform.position))
+            {
+                p0 = transform.position;
+                p2 = GameManager.Instance.homePlanet.transform.position;
+                t = 0;
+            }
+            //Code for a spiral movement:
+            //transform.position = Bezier.SpiralThreePointBezier(P0, P1, P2, t, t_ellipse, a, b);
+            //Vector3 relativePos = Bezier.SpiralThreePointBezier(P0, P1, P2,
+            //t + Time.deltaTime * speed / totalLength / Bezier.GetSpeedByCoordLength(t + Time.deltaTime, subdivs, ref speedByChordsLengths),
+            //t_ellipse + Time.deltaTime, a, b) - transform.position;
+            //Quaternion rotation = Quaternion.LookRotation(relativePos);
+            //transform.rotation = rotation * Quaternion.Euler(90, 0, 0);
+            //t_ellipse += Time.deltaTime * t_speed;
+        }
+        else
+        {
+            t += Time.deltaTime * speed / totalLength / Bezier.GetSpeedByCoordLength(t, subdivs, ref speedByChordsLengths);
+            t = Mathf.Clamp01(t);
 
-        transform.position = Bezier.GetThreePoint(P0, P1, P2, t);
-        transform.rotation = Quaternion.LookRotation(new Vector3(0, 0, 1), 
-            Bezier.GetFirstDerivativeForThreePoints(P0, P1, P2, t));
+            transform.position = Bezier.GetThreePoint(P0, P1, P2, t);
+            transform.rotation = Quaternion.LookRotation(new Vector3(0, 0, 1),
+                Bezier.GetFirstDerivativeForThreePoints(P0, P1, P2, t));
+        } 
     }
 
     public void RandomP1(float minOffset = 3f, float maxOffset = 7f)
     {
-        Vector3 testP1position = new Vector3(P0.x + Random.Range(minOffset, maxOffset) * randomPlusMinus(), 
-            P0.y + Random.Range(minOffset, maxOffset) * randomPlusMinus(), 0 );
-        p1 = testP1position;
-        ResetCoords();
+        if (currentMode == RocketLauncher.Mode.enemyAI)
+        {
+            float x = Random.value >= 0.5 ? GameManager.Instance.minScreenEdge.x : GameManager.Instance.maxScreenEdge.x;
+            float y = P0.y - Random.Range(minOffset, maxOffset);
+            p1 = new Vector2(x, y);
+            p2 = new Vector2(x, y);
+        }
+        else
+        {
+            p1 = new Vector3(P0.x + Random.Range(minOffset, maxOffset) * randomPlusMinus(),
+                            P0.y + Random.Range(minOffset, maxOffset) * randomPlusMinus(),
+                            P0.z);
+            ResetCoords();
+        }
     }
 
     private int randomPlusMinus()
@@ -136,7 +156,6 @@ public class ThreeBezierScript : MonoBehaviour
     public void ResetCoords()
     {
         Bezier.PrepareCoords(subdivs, P0, P1, P2, ref speedByChordsLengths, ref totalLength);
-
     }
 
     void OnTriggerEnter2D(Collider2D col)

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "846119204082",
+    "project_id": "magicrocket-656f5",
+    "storage_bucket": "magicrocket-656f5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:846119204082:android:ec0421081390c696878c6b",
+        "android_client_info": {
+          "package_name": "com.BestCompany.MagicRocket.test"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "846119204082-jqn50nnt98qr4eh3na7kf2m90qll44m0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBy43wf2tWd6xMeTTgRPyJnGQVIpWLGCg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "846119204082-jqn50nnt98qr4eh3na7kf2m90qll44m0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
