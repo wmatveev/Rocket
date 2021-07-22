@@ -18,7 +18,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     private Transform launchPoint;
     private bool isDraged = false;
     private LineRenderer lineRenderer;
-    private int armageddonCounter = 0;
+    public int rocketGuidedRCounter = 0;
     [SerializeField] private GameObject aim;
 
     //for autoGun movement
@@ -99,13 +99,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             OnDrag(eventData);
         }
         if (currentMode == Mode.manualAiming)
-        {
-            //clickPoint = launchPoint.position;
-            //clickPoint.y -= currentOffset;
-            //clickOffset = Camera.main.ScreenToWorldPoint(eventData.position);
-            //clickOffset = new Vector2(clickOffset.x - clickPoint.x, clickOffset.y - clickPoint.y);
             OnDrag(eventData);
-        }
     }
 
     public virtual void OnDrag(PointerEventData eventData)
@@ -147,7 +141,6 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
         lineRenderer.SetPosition(0, new Vector3(0, 0, 2));
         lineRenderer.SetPosition(1, new Vector3(0, 0, 2));
-        //currentOffset = 0f;
         clickPoint = launchPoint.position;
         isDraged = false;
         aim.SetActive(false);
@@ -160,11 +153,14 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
         if (currentMode == Mode.rocketGuidance || currentMode == Mode.armageddon)
         {
-            if (GameManager.Instance.currEnemyRockets.Count > 0)
+            if (GameManager.Instance.currEnemyRockets.Count > rocketGuidedRCounter)
             {
-                ThreeBezierScript target = GameManager.Instance.currEnemyRockets[armageddonCounter];
-                bezier.SetPoints(target.P2, target.P1, target.P0);
-                //GameManager.Instance.currEnemyRockets.RemoveAt(0);
+                ThreeBezierScript target = GameManager.Instance.currEnemyRockets[rocketGuidedRCounter];
+                Vector3 startPos = GameManager.Instance.homePlanet.transform.position;
+                Ray ray = new Ray(startPos, target.gameObject.transform.position - startPos);
+                bezier.SetPoints(startPos,
+                                 ray.GetPoint(Vector3.Distance(startPos, target.gameObject.transform.position) / 2),
+                                 target.gameObject.transform);
             }
             else GameManager.Instance.RocketBackToPool(bezier);
         }
@@ -188,12 +184,12 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             else
                 P3 = ray.GetPoint(offset * 100);
 
-            bezier.SetPoints(launchPoint.position, clickPoint, P3);//ray.GetPoint(offset), ray.GetPoint(offset * 100));
+            bezier.SetPoints(launchPoint.position, clickPoint, P3);
         }
         if (currentMode == Mode.tapLaunch)
         {
             //Ray ray = new Ray(launchPoint.position, clickPoint - new Vector2(launchPoint.position.x, launchPoint.position.y));
-            bezier.SetPoints(launchPoint.position, clickPoint, clickPoint);//ray.GetPoint(currentOffset * 100)); 
+            bezier.SetPoints(launchPoint.position, clickPoint, clickPoint);
         }
     }
     
@@ -206,12 +202,6 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         bezier.SetPoints(autoGun.transform.position, ray.GetPoint(offset * 10), ray.GetPoint(offset * 100));
     }
 
-    //private IEnumerator Reload()
-    //{
-    //    isReloaded = true;
-    //    yield return new WaitForSeconds(reloadTime);
-    //    isReloaded = false;
-    //}
     public void changeAimMode()
     {
         if (currentMode == Mode.manualAiming)
@@ -241,6 +231,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         lastAimMode = currentMode;
         currentMode = Mode.rocketGuidance;
         RocketLaunch();
+        rocketGuidedRCounter++;
         currentMode = lastAimMode;
     }
 
@@ -248,13 +239,14 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     {
         lastAimMode = currentMode;
         currentMode = Mode.armageddon;
+        Debug.Log("arm");
         int countOfTargets = GameManager.Instance.currEnemyRockets.Count;
         for (int i = 0; i < countOfTargets; i++)
         {
             RocketLaunch();
-            armageddonCounter++;
+            rocketGuidedRCounter++;
         }
-        armageddonCounter = 0;
+        rocketGuidedRCounter = 0;
         currentMode = lastAimMode;
     }
 }

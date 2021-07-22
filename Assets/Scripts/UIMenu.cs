@@ -44,7 +44,8 @@ public class UIMenu : MonoBehaviour
 
     public void BackToMainMenu()
     {
-        SceneManager.LoadScene(0);
+        Application.Quit();
+        //SceneManager.LoadScene(0);
     }
     public void NextLevel()
     {

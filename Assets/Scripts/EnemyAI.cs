@@ -5,9 +5,15 @@ using UnityEngine;
 public class EnemyAI : MonoBehaviour
 {
     public static EnemyAI Instance { get; private set; }
-    public ThreeBezierScript threeBezierScript;
     public float timeToReload = 2f;
     private float cooldown = 0f;
+
+    public eMode enemyMode;
+    public enum eMode
+    {
+        Bezier,
+        Linear
+    }
 
     private void Awake()
     {
@@ -16,7 +22,7 @@ public class EnemyAI : MonoBehaviour
         Sprite sprite = (Sprite)sprites[Random.Range(0, sprites.Length)];
         gameObject.GetComponent<SpriteRenderer>().sprite = sprite;
     }
-    void Update()
+    void FixedUpdate()
     {
         if (GameManager.Instance.amountOfERocketsOnLevel == 0)
         {
@@ -30,11 +36,12 @@ public class EnemyAI : MonoBehaviour
     private void Shoot()
     {       
         ThreeBezierScript bezier = GameManager.Instance.GetEnemyRocketFromPool();
-
         bezier.SetPoints(GameManager.Instance.enemyPlanet.transform.position, new Vector3(), GameManager.Instance.homePlanet.transform.position);
         bezier.currentMode = RocketLauncher.Mode.enemyAI;
-        //bezier.RandomP1(8f, 10f);
-        bezier.RandomP1(1f, 9f);
+        if (enemyMode == eMode.Bezier)
+            bezier.RandomP1(8f, 10f);
+        else 
+            bezier.RandomP1(1f, 9f);
         cooldown = 0f;
     }
 }

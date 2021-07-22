@@ -194,6 +194,9 @@ public class GameManager : MonoBehaviour
     }
     private bool CanGetRocket(RocketLauncher.Mode mode)
     {
+        if (mode == RocketLauncher.Mode.armageddon)
+            return true;
+
         if (mode == RocketLauncher.Mode.rocketGuidance && (amountOfSelfGuidedRockets > 0))
         {
             amountOfSelfGuidedRockets--;
