@@ -74,8 +74,16 @@ public class ThreeBezierScript : MonoBehaviour
             p2 = target.transform.position;
 
         gameObject.transform.position = Bezier.GetThreePoint(P0, P1, P2, t);
-        gameObject.transform.rotation = Quaternion.LookRotation(new Vector3(0, 0, 1),
-            Bezier.GetFirstDerivativeForThreePoints(P0, P1, P2, t));
+        //костыль в коде
+        gameObject.transform.position = new Vector3(gameObject.transform.position.x, gameObject.transform.position.y, 
+            GameManager.Instance.homePlanet.transform.position.z);
+        //gameObject.transform.rotation = Quaternion.LookRotation(new Vector3(0, 0, 1),
+        //    Bezier.GetFirstDerivativeForThreePoints(P0, P1, P2, t));
+        Vector3 relativePos = Bezier.GetThreePoint(P0, P1, P2,
+        t + Time.deltaTime * speed / totalLength / Bezier.GetSpeedByCoordLength(t + Time.deltaTime, subdivs, ref speedByChordsLengths))
+            - transform.position;
+        Quaternion rotation = Quaternion.LookRotation(relativePos);
+        transform.rotation = rotation * Quaternion.Euler(-90, 0, 35);
         if (t >= 1)
         {
             if (currentMode == RocketLauncher.Mode.loop)
@@ -181,12 +189,12 @@ public class ThreeBezierScript : MonoBehaviour
             Bezier.PrepareCoords(subdivs, P0, P1, P2, ref speedByChordsLengths, ref totalLength);
     }
 
-    void OnTriggerEnter2D(Collider2D col)
+    void OnTriggerEnter(Collider col)
     {
         if (currentMode != RocketLauncher.Mode.loop)
         {
             if (col.gameObject.layer == gameObject.layer)
-                return;
+                return;            
             if (currentMode == RocketLauncher.Mode.rocketGuidance)
             {
                 RocketLauncher.Instance.rocketGuidedRCounter--;

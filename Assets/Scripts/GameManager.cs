@@ -52,21 +52,21 @@ public class GameManager : MonoBehaviour
     }
     [SerializeField]
     private float distance;
-    private void OnDrawGizmos()
-    {
-        Vector3 p1 = Camera.main.ScreenToWorldPoint(new Vector3(0f, 0f, distance));
-        Vector3 p2 = Camera.main.ScreenToWorldPoint(new Vector3(0f, Camera.main.pixelHeight, distance));
-        Vector3 p3 = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth, Camera.main.pixelHeight, distance));
-        Vector3 p4 = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth, 0f, distance));
-        Gizmos.DrawLine(p1, p2);
-        Gizmos.DrawLine(p2, p3);
-        Gizmos.DrawLine(p3, p4);
-        Gizmos.DrawLine(p4, p1);
-    }
+    //private void OnDrawGizmos()
+    //{
+    //    Vector3 p1 = Camera.main.ScreenToWorldPoint(new Vector3(0f, 0f, distance));
+    //    Vector3 p2 = Camera.main.ScreenToWorldPoint(new Vector3(0f, Camera.main.pixelHeight, distance));
+    //    Vector3 p3 = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth, Camera.main.pixelHeight, distance));
+    //    Vector3 p4 = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth, 0f, distance));
+    //    Gizmos.DrawLine(p1, p2);
+    //    Gizmos.DrawLine(p2, p3);
+    //    Gizmos.DrawLine(p3, p4);
+    //    Gizmos.DrawLine(p4, p1);
+    //}
     public Vector2 minScreenEdge, maxScreenEdge;
     private void SetScreenEdges()
     {
-        Vector3 bottomLeft, bottomRight, topLeft, topRight;
+        Vector3 bottomLeft, topRight;
         bottomLeft = Camera.main.ScreenToWorldPoint(new Vector3(0f, 0f, distance));
         //topLeft = Camera.main.ScreenToWorldPoint(new Vector3(0f, Camera.main.pixelHeight, distance));
         topRight = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth, Camera.main.pixelHeight, distance));
@@ -216,6 +216,7 @@ public class GameManager : MonoBehaviour
         playerRocketsPool.Add(rocket);
         rocket.gameObject.SetActive(false);
         rocket.gameObject.transform.position = rocket.P0;
+        Debug.Log("RocketBackToPool");
     }
 
     public ThreeBezierScript GetEnemyRocketFromPool()

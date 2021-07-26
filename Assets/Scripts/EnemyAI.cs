@@ -18,10 +18,8 @@ public class EnemyAI : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        Object[] sprites = Resources.LoadAll("Sprites/Planets/EnemyPlanets", typeof(Sprite));
-        Sprite sprite = (Sprite)sprites[Random.Range(0, sprites.Length)];
-        gameObject.GetComponent<SpriteRenderer>().sprite = sprite;
     }
+
     void FixedUpdate()
     {
         if (GameManager.Instance.amountOfERocketsOnLevel == 0)
@@ -39,9 +37,16 @@ public class EnemyAI : MonoBehaviour
         bezier.SetPoints(GameManager.Instance.enemyPlanet.transform.position, new Vector3(), GameManager.Instance.homePlanet.transform.position);
         bezier.currentMode = RocketLauncher.Mode.enemyAI;
         if (enemyMode == eMode.Bezier)
-            bezier.RandomP1(8f, 10f);
+            bezier.RandomP1(3f, 6f);
         else 
             bezier.RandomP1(1f, 9f);
         cooldown = 0f;
+    }
+
+    private void SelectRandomSprite()
+    {
+        Object[] sprites = Resources.LoadAll("Sprites/Planets/EnemyPlanets", typeof(Sprite));
+        Sprite sprite = (Sprite)sprites[Random.Range(0, sprites.Length)];
+        gameObject.GetComponent<SpriteRenderer>().sprite = sprite;
     }
 }
