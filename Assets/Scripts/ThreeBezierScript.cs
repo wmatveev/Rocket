@@ -83,7 +83,11 @@ public class ThreeBezierScript : MonoBehaviour
                 t = 0;
                 RandomP1();
             }
-            else Destroy(gameObject);
+            else
+            {
+                GameManager.Instance.Explose(gameObject.transform.position);
+                Destroy(gameObject);
+            }
         }
     }
     private void MoveForward()
@@ -187,6 +191,8 @@ public class ThreeBezierScript : MonoBehaviour
         {
             if (col.gameObject.layer == gameObject.layer)
                 return;
+            Debug.Log(gameObject.name);
+            GameManager.Instance.Explose(gameObject.transform.position);
             if (currentMode == RocketLauncher.Mode.rocketGuidance)
             {
                 RocketLauncher.Instance.rocketGuidedRCounter--;
@@ -205,6 +211,7 @@ public class ThreeBezierScript : MonoBehaviour
                 GameManager.Instance.RocketBackToPool(this);
                 return;
             }
+
             Destroy(gameObject);
         }
     }

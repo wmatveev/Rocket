@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour
 
     [HideInInspector] public GameObject losePanel, winPanel;
     [HideInInspector] public GameObject homePlanet, enemyPlanet;
+    public GameObject explosion;
    
     public int amountOfSelfGuidedRockets;
 
@@ -47,9 +48,11 @@ public class GameManager : MonoBehaviour
         SetLevelSettings();
         StartFirebase();
 
+        CreateRocketSpritesPool();
         createRocketPool("Rocket", amountOfSelfGuidedRockets + amountOfPlayerRockets + 5);
         createRocketPool("EnemyRocket", amountOfERocketsOnLevel);        
     }
+    #region ScreenSettings
     [SerializeField]
     private float distance;
     private void OnDrawGizmos()
@@ -83,6 +86,7 @@ public class GameManager : MonoBehaviour
             return true;
         return false;
     }
+    #endregion
     #region LevelSettings
     [HideInInspector]
     public int amountOfERocketsOnLevel = 0, //how many rockets we need to destroy to win
@@ -228,6 +232,7 @@ public class GameManager : MonoBehaviour
             enemyRocketsPool.Remove(rocketTmp);
             rocketTmp.gameObject.transform.parent = null;
             rocketTmp.isDrawn = false;
+            rocketTmp.GetComponent<SpriteRenderer>().sprite = sprites[Random.Range(0, sprites.Count)];
             currEnemyRockets.Add(rocketTmp);
             launchedERockets++;
         }
@@ -253,6 +258,19 @@ public class GameManager : MonoBehaviour
     public bool EnemyCanShoot()
     {
         return launchedERockets < eRocketsToLaunch && amountOfERocketsOnLevel - launchedERockets > 0;
+    }
+
+    private List<Sprite> sprites = new List<Sprite>();
+    private void CreateRocketSpritesPool()
+    {
+        Object[] tmp_sprites = Resources.LoadAll("Sprites/Rockets", typeof(Sprite));
+        foreach (var sprite in tmp_sprites)
+            sprites.Add((Sprite)sprite);
+    }
+
+    public void Explose(Vector3 coord)
+    {
+        Instantiate(explosion, coord, Quaternion.identity);
     }
     #endregion
 

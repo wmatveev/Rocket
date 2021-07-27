@@ -22,6 +22,7 @@ public class EnemyAI : MonoBehaviour
         Sprite sprite = (Sprite)sprites[Random.Range(0, sprites.Length)];
         gameObject.GetComponent<SpriteRenderer>().sprite = sprite;
     }
+
     void FixedUpdate()
     {
         if (GameManager.Instance.amountOfERocketsOnLevel == 0)

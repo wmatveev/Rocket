@@ -13,11 +13,16 @@ public class UIMainMenu : MonoBehaviour
 
     public void PlayGame()
     {
-        SceneManager.LoadScene(1);
+        SceneManager.LoadScene("FreeBezier");
     }
     
     public void ResetSave()
     {
         PlayerPrefs.DeleteAll();
+    }
+
+    public void ExitApp()
+    {
+        Application.Quit();
     }
 }
