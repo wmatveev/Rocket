@@ -4,9 +4,12 @@ using System.Collections.Specialized;
 using UnityEngine;
 using UnityEngine.UI;
 
+//analytics
 using Firebase;
 using Firebase.Analytics;
 using Firebase.Extensions;
+using UnityEngine.Analytics;
+
 public class GameManager : MonoBehaviour
 {
     #region Singleton
@@ -69,11 +72,9 @@ public class GameManager : MonoBehaviour
     public Vector2 minScreenEdge, maxScreenEdge;
     private void SetScreenEdges()
     {
-        Vector3 bottomLeft, bottomRight, topLeft, topRight;
+        Vector3 bottomLeft, topRight;
         bottomLeft = Camera.main.ScreenToWorldPoint(new Vector3(0f, 0f, distance));
-        //topLeft = Camera.main.ScreenToWorldPoint(new Vector3(0f, Camera.main.pixelHeight, distance));
         topRight = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth, Camera.main.pixelHeight, distance));
-        //bottomRight = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth, 0f, distance));
 
         minScreenEdge = new Vector2(bottomLeft.x, bottomLeft.y);
         maxScreenEdge = new Vector2(topRight.x, topRight.y);
@@ -114,7 +115,7 @@ public class GameManager : MonoBehaviour
     }
     #endregion
 
-    #region Firebase
+    #region Analytics
     //firebase info
     DependencyStatus dependencyStatus = DependencyStatus.UnavailableOther;
     private void StartFirebase()
@@ -153,7 +154,15 @@ public class GameManager : MonoBehaviour
             PlayerPrefs.DeleteKey("LosingOnThisLevel");
         }
 
+        LevelInfo.Instance.SetEndLevelInfo(winRate);
+
         string param = "winRateOnLevel" + currentLevel.ToString();
+
+        Analytics.CustomEvent("level " + currentLevel + " end", new Dictionary<string, object>
+        {
+            { param, winRate },
+            { "score", score }
+        });
 
         FirebaseAnalytics.LogEvent(FirebaseAnalytics.EventLevelEnd, FirebaseAnalytics.ParameterLevel, currentLevel);
         FirebaseAnalytics.LogEvent("winrate", param, winRate);

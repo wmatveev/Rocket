@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.Analytics;
 
 public class UIMainMenu : MonoBehaviour
 {
@@ -13,7 +14,7 @@ public class UIMainMenu : MonoBehaviour
 
     public void PlayGame()
     {
-        SceneManager.LoadScene("FreeBezier");
+        SceneManager.LoadScene("FreeBezier"); 
     }
     
     public void ResetSave()
