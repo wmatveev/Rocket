@@ -46,6 +46,7 @@ public class ThreeBezierScript : MonoBehaviour
                 MoveForward();
             else
                 MoveBezier();
+            SetCurrentScale();
         } 
         catch
         {
@@ -76,6 +77,7 @@ public class ThreeBezierScript : MonoBehaviour
         gameObject.transform.position = Bezier.GetThreePoint(P0, P1, P2, t);
         gameObject.transform.rotation = Quaternion.LookRotation(new Vector3(0, 0, 1),
             Bezier.GetFirstDerivativeForThreePoints(P0, P1, P2, t));
+
         if (t >= 1)
         {
             if (currentMode == RocketLauncher.Mode.loop)
@@ -95,6 +97,14 @@ public class ThreeBezierScript : MonoBehaviour
             SetPoints(transform.position,
                 GameManager.Instance.homePlanet.transform.position, GameManager.Instance.homePlanet.transform.position);
         }
+    }
+    private float scaleMin = 0.3f, scaleMax = 1.4f;
+    private void SetCurrentScale()
+    {
+        float allPath = GameManager.Instance.enemyPlanet.transform.position.y - GameManager.Instance.homePlanet.transform.position.y;
+        float currentDistance = GameManager.Instance.enemyPlanet.transform.position.y - gameObject.transform.position.y;
+        float currentScale = scaleMin + (scaleMax - scaleMin) * (currentDistance / allPath);
+        gameObject.transform.localScale = currentScale > 1f ? new Vector3(1, 1, 1) : new Vector3(currentScale, currentScale, 1);
     }
 
     private void SetForwardRotation()

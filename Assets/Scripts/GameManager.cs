@@ -20,9 +20,9 @@ public class GameManager : MonoBehaviour
     public List<ThreeBezierScript> enemyRocketsPool = new List<ThreeBezierScript>();
     public List<ThreeBezierScript> currEnemyRockets = new List<ThreeBezierScript>();
 
-    [HideInInspector] public GameObject losePanel, winPanel;
     [HideInInspector] public GameObject homePlanet, enemyPlanet;
     public GameObject explosion;
+    public GameObject lightning;
    
     public int amountOfSelfGuidedRockets;
 
@@ -37,11 +37,6 @@ public class GameManager : MonoBehaviour
         homePlanet = GameObject.FindWithTag("HomePlanet");
         enemyPlanet = GameObject.FindWithTag("EnemyPlanet");
 
-        losePanel = GameObject.Find("losePanel");
-        losePanel.SetActive(false);
-        winPanel = GameObject.Find("winPanel");
-        winPanel.SetActive(false);
-
         SetCurrentLevel();
     }
 
@@ -53,7 +48,11 @@ public class GameManager : MonoBehaviour
 
         CreateRocketSpritesPool();
         createRocketPool("Rocket", amountOfSelfGuidedRockets + amountOfPlayerRockets + 5);
-        createRocketPool("EnemyRocket", amountOfERocketsOnLevel);        
+        createRocketPool("EnemyRocket", amountOfERocketsOnLevel);
+        ParticleTrigger triggerScript = lightning.GetComponent<ParticleTrigger>();
+        if (triggerScript)
+            triggerScript.SetTriggers();
+
     }
     #region ScreenSettings
     [SerializeField]
@@ -253,7 +252,7 @@ public class GameManager : MonoBehaviour
         if (currEnemyRockets.Contains(enemyRocket))       
             currEnemyRockets.Remove(enemyRocket);
         score += (int)(100 * (1 - enemyRocket.T));
-        UIMenu.Instance.SetScore();
+        UIMenu.Instance.ResetLvlInfo();
         enemyRocket.T = 0;
         enemyRocket.gameObject.transform.SetParent(enemyRocketsPool[0].gameObject.transform.parent);
         enemyRocketsPool.Add(enemyRocket);
@@ -269,10 +268,10 @@ public class GameManager : MonoBehaviour
         return launchedERockets < eRocketsToLaunch && amountOfERocketsOnLevel - launchedERockets > 0;
     }
 
-    private List<Sprite> sprites = new List<Sprite>();
+    public List<Sprite> sprites = new List<Sprite>();
     private void CreateRocketSpritesPool()
     {
-        Object[] tmp_sprites = Resources.LoadAll("Sprites/Rockets", typeof(Sprite));
+        Object[] tmp_sprites = Resources.LoadAll("Sprites/Rockets/EnemyRockets", typeof(Sprite));
         foreach (var sprite in tmp_sprites)
             sprites.Add((Sprite)sprite);
     }
@@ -285,21 +284,23 @@ public class GameManager : MonoBehaviour
 
    public void LevelIsCompleted()
     {
+        UIMenu.Instance.endLvlFade.SetActive(true);
         Time.timeScale = 0;
         EndlevelAnalytics();
-        Text text = winPanel.transform.Find("Score").gameObject.GetComponent<Text>();
+        Text text = UIMenu.Instance.winPanel.transform.Find("Score").gameObject.GetComponent<Text>();
         text.text = "Score: " + score;
-        winPanel.SetActive(true);
+        UIMenu.Instance.winPanel.SetActive(true);
     }
     
     public void LevelIsLosed()
     {
+        UIMenu.Instance.endLvlFade.SetActive(true);
         if (PlayerPrefs.HasKey("LosingOnThisLevel"))
             PlayerPrefs.SetInt("LosingOnThisLevel", PlayerPrefs.GetInt("LosingOnThisLevel") + 1);
         else
             PlayerPrefs.SetInt("LosingOnThisLevel", 1);
 
         Time.timeScale = 0;
-        losePanel.SetActive(true);
+        UIMenu.Instance.losePanel.SetActive(true);
     }
 }

@@ -18,9 +18,9 @@ public class EnemyAI : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        Object[] sprites = Resources.LoadAll("Sprites/Planets/EnemyPlanets", typeof(Sprite));
-        Sprite sprite = (Sprite)sprites[Random.Range(0, sprites.Length)];
-        gameObject.GetComponent<SpriteRenderer>().sprite = sprite;
+        //Object[] sprites = Resources.LoadAll("Sprites/Planets/EnemyPlanets", typeof(Sprite));
+        //Sprite sprite = (Sprite)sprites[Random.Range(0, sprites.Length)];
+        //gameObject.GetComponent<SpriteRenderer>().sprite = sprite;
     }
 
     void FixedUpdate()
