@@ -198,6 +198,8 @@ public class ThreeBezierScript : MonoBehaviour
         {
             if (col.gameObject.layer == gameObject.layer)
                 return;
+            if (col.gameObject.layer == 6)
+                GameManager.Instance.Explose(gameObject.transform.position);
             if (currentMode == RocketLauncher.Mode.rocketGuidance)
             {
                 RocketLauncher.Instance.rocketGuidedRCounter--;
@@ -220,9 +222,9 @@ public class ThreeBezierScript : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
     void OnBecameInvisible()
     {
-        GameManager.Instance.Explose(gameObject.transform.position);
         if (gameObject.activeSelf == true)
         {
             if (currentMode == RocketLauncher.Mode.manualAiming || currentMode == RocketLauncher.Mode.tapLaunch)

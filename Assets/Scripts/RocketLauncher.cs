@@ -18,7 +18,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     private Vector3 launchPoint = new Vector3();
     private bool isDraged = false;
     private LineRenderer lineRenderer;
-    public int rocketGuidedRCounter = 0;
+    [HideInInspector] public int rocketGuidedRCounter = 0;
     [SerializeField] private GameObject aim;
     [SerializeField] private ParticleSystem lightning;
 
@@ -115,7 +115,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             autoGun.transform.position = newPosition;
         }
 
-        if (currentMode == Mode.manualAiming)
+        if (currentMode == Mode.manualAiming) //line aim
         {
             clickPoint = Camera.main.ScreenToWorldPoint(eventData.position);
             clickPoint = new Vector2(clickPoint.x - clickOffset.x, clickPoint.y - clickOffset.y);
@@ -135,6 +135,9 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             aimPosition.y += offset;
             clickPoint = aimPosition;
             aim.transform.position = aimPosition;
+            Ray ray = new Ray(Aim.Instance.position, aimPosition - Aim.Instance.position);
+            aimPosition = ray.GetPoint(Vector2.Distance(aimPosition, Aim.Instance.position) - (offset*2)/5);
+            Aim.Instance.PutAimPoints(aimPosition);
         }
     }
 
@@ -151,6 +154,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         clickPoint = launchPoint;
         isDraged = false;
         aim.SetActive(false);
+        Aim.Instance.DeactivateAim();
     }
 
     private void RocketLaunch()
@@ -180,22 +184,23 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     private void SetPoints(ThreeBezierScript bezier)
     {
         bezier.SetPointP1(new Vector3());
-        if (currentMode == Mode.manualAiming)
+        if (currentMode == Mode.manualAiming || currentMode == Mode.tapLaunch)
         {
             Ray ray = new Ray(launchPoint, clickPoint - new Vector2(launchPoint.x, launchPoint.y));//new Vector2(launchPoint.x, launchPoint.y) - clickPoint);
             Vector2 P3 = new Vector2();
-            if (offset == 0)
-                P3 = ray.GetPoint(300);
-            else
-                P3 = ray.GetPoint(offset * 100);
+            //if (offset == 0)
+            //    P3 = ray.GetPoint(300);
+            //else
+            //    P3 = ray.GetPoint(offset * 100);
 
+            P3 = ray.GetPoint(Vector2.Distance(GameManager.Instance.maxScreenEdge, GameManager.Instance.minScreenEdge));
             bezier.SetPoints(launchPoint, clickPoint, P3);
         }
-        if (currentMode == Mode.tapLaunch)
-        {
-            //Ray ray = new Ray(launchPoint.position, clickPoint - new Vector2(launchPoint.x, launchPoint.y));
-            bezier.SetPoints(launchPoint, clickPoint, clickPoint);
-        }
+        //if (currentMode == Mode.tapLaunch)
+        //{
+        //    //Ray ray = new Ray(launchPoint.position, clickPoint - new Vector2(launchPoint.x, launchPoint.y));
+        //    bezier.SetPoints(launchPoint, clickPoint, clickPoint);
+        //}
     }
     
     private void Lightning()

@@ -25,8 +25,9 @@ public class GameManager : MonoBehaviour
     public GameObject lightning;
    
     public int amountOfSelfGuidedRockets;
-
+    public int eRocketsToLose;
     [HideInInspector] public int currentLevel;
+    [HideInInspector] public int catchedERockets = 0;
     [HideInInspector] public int score = 0;
 
     private void Awake()
@@ -294,13 +295,17 @@ public class GameManager : MonoBehaviour
     
     public void LevelIsLosed()
     {
-        UIMenu.Instance.endLvlFade.SetActive(true);
-        if (PlayerPrefs.HasKey("LosingOnThisLevel"))
-            PlayerPrefs.SetInt("LosingOnThisLevel", PlayerPrefs.GetInt("LosingOnThisLevel") + 1);
-        else
-            PlayerPrefs.SetInt("LosingOnThisLevel", 1);
+        catchedERockets++;
+        if (catchedERockets >= eRocketsToLose)
+        {
+            UIMenu.Instance.endLvlFade.SetActive(true);
+            if (PlayerPrefs.HasKey("LosingOnThisLevel"))
+                PlayerPrefs.SetInt("LosingOnThisLevel", PlayerPrefs.GetInt("LosingOnThisLevel") + 1);
+            else
+                PlayerPrefs.SetInt("LosingOnThisLevel", 1);
 
-        Time.timeScale = 0;
-        UIMenu.Instance.losePanel.SetActive(true);
+            Time.timeScale = 0;
+            UIMenu.Instance.losePanel.SetActive(true);
+        }
     }
 }
