@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// This class was used to move masks and gradient, which made up the dotted line to the aim
+/// </summary>
 public class Aim : MonoBehaviour
 {
     #region Singleton

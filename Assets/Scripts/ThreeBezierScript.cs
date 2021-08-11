@@ -29,7 +29,7 @@ public class ThreeBezierScript : MonoBehaviour
 
     public float[] speedByChordsLengths;
     protected float totalLength;
-
+    private bool isExploding = false;
     void Start() 
     {
         ResetCoords();
@@ -42,9 +42,9 @@ public class ThreeBezierScript : MonoBehaviour
         {
             if (isDrawn == false && lineRenderer != null)
                 DrawPath();
-            if (currentMode == RocketLauncher.Mode.enemyAI && EnemyAI.Instance.enemyMode == EnemyAI.eMode.Linear)
-                MoveForward();
-            else
+            //if (currentMode == RocketLauncher.Mode.enemyAI && EnemyAI.Instance.enemyMode == EnemyAI.eMode.Linear)
+            //    MoveForward();
+            //else
                 MoveBezier();
             SetCurrentScale();
         } 
@@ -80,13 +80,16 @@ public class ThreeBezierScript : MonoBehaviour
 
         if (t >= 1)
         {
-            if (currentMode == RocketLauncher.Mode.loop)
+            if (currentMode != RocketLauncher.Mode.loop)
+            {
+                Explose();
+                Destroy(gameObject);
+            }
+            else
             {
                 t = 0;
                 RandomP1();
             }
-            else
-                Destroy(gameObject);
         }
     }
     private void MoveForward()
@@ -192,14 +195,25 @@ public class ThreeBezierScript : MonoBehaviour
             Bezier.PrepareCoords(subdivs, P0, P1, P2, ref speedByChordsLengths, ref totalLength);
     }
 
+    private void Explose()
+    {
+        if (!isExploding)
+            if (currentMode == RocketLauncher.Mode.enemyAI)
+            {
+                GameManager.Instance.Explose(gameObject.transform.position);
+                isExploding = true;
+            }
+    }
+
     void OnTriggerEnter2D(Collider2D col)
     {
         if (currentMode != RocketLauncher.Mode.loop)
         {
             if (col.gameObject.layer == gameObject.layer)
                 return;
-            if (col.gameObject.layer == 6)
-                GameManager.Instance.Explose(gameObject.transform.position);
+            //Debug.Log(gameObject.name + "  " + gameObject.layer);
+            if (gameObject.layer == 7)
+                Explose();
             if (currentMode == RocketLauncher.Mode.rocketGuidance)
             {
                 RocketLauncher.Instance.rocketGuidedRCounter--;

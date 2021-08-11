@@ -31,7 +31,6 @@ public static class Bezier
             3f * oneMinusT * Mathf.Pow(t, 2) * p2 +
             Mathf.Pow(t, 3) * p3;
     }
-
     // (2*p2-4*p1+2*p0)*t+2*p1-2*p0
     public static Vector2 GetFirstDerivativeForThreePoints(Vector2 p0, Vector2 p1, Vector2 p2, float t)
     {

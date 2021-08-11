@@ -55,7 +55,7 @@ public class UIMenu : MonoBehaviour
     public void SetRocketsAmount()
     {
         amountOfSelfGuidedRockets.text = GameManager.Instance.amountOfSelfGuidedRockets.ToString();
-        amountOfPlayerRockets.text = GameManager.Instance.amountOfPlayerRockets.ToString();
+        //amountOfPlayerRockets.text = GameManager.Instance.amountOfPlayerRockets.ToString();
 
     }
     public void ReloadScene()

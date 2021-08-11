@@ -2,6 +2,9 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+/// <summary>
+/// This class manages triggers for particle system (armageddon)
+/// </summary>
 public class ParticleTrigger : MonoBehaviour
 {
     ParticleSystem ps;

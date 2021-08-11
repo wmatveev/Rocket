@@ -9,6 +9,7 @@ TagManager:
   - EnemyPlanet
   - HomePlanet
   - AutoGun
+  - Asteroid
   layers:
   - Default
   - TransparentFX

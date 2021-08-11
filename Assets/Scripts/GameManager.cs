@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour
     public List<ThreeBezierScript> playerRocketsPool = new List<ThreeBezierScript>();
     public List<ThreeBezierScript> enemyRocketsPool = new List<ThreeBezierScript>();
     public List<ThreeBezierScript> currEnemyRockets = new List<ThreeBezierScript>();
+    public List<AsteroidMotion> asteroidsPool = new List<AsteroidMotion>();
 
     [HideInInspector] public GameObject homePlanet, enemyPlanet;
     public GameObject explosion;
@@ -47,9 +48,9 @@ public class GameManager : MonoBehaviour
         SetLevelSettings();
         StartFirebase();
 
-        CreateRocketSpritesPool();
         createRocketPool("Rocket", amountOfSelfGuidedRockets + amountOfPlayerRockets + 5);
         createRocketPool("EnemyRocket", amountOfERocketsOnLevel);
+        createRocketPool("Asteroid", 10);
         ParticleTrigger triggerScript = lightning.GetComponent<ParticleTrigger>();
         if (triggerScript)
             triggerScript.SetTriggers();
@@ -187,9 +188,21 @@ public class GameManager : MonoBehaviour
                 erocket.speed *= speedCoef;
                 enemyRocketsPool.Add(erocket);
             }
+            if (type == "Asteroid") 
+                asteroidsPool.Add(tmp_rocket.GetComponent<AsteroidMotion>());
             tmp_rocket.SetActive(false);
         }
         Destroy(rocket);
+    }
+
+    public AsteroidMotion GetAsteroidFromPool()
+    {
+        AsteroidMotion asteroidTmp = new AsteroidMotion();
+        asteroidTmp = asteroidsPool[0];
+        asteroidsPool.Remove(asteroidTmp);
+        asteroidTmp.gameObject.SetActive(true);
+        asteroidTmp.gameObject.transform.parent = null;
+        return asteroidTmp;
     }
 
     public ThreeBezierScript GetRocketFromPool(RocketLauncher.Mode mode)
@@ -201,6 +214,11 @@ public class GameManager : MonoBehaviour
             playerRocketsPool.Remove(rocketTmp);
             rocketTmp.gameObject.SetActive(true);
             rocketTmp.gameObject.transform.parent = null;
+            if (mode == RocketLauncher.Mode.armageddon || mode == RocketLauncher.Mode.rocketGuidance)
+            {
+                Animator animator = rocketTmp.GetComponent<Animator>();
+                animator.runtimeAnimatorController = Resources.Load("Animation/Rockets/Fire2") as RuntimeAnimatorController;
+            }
         }
         UIMenu.Instance.SetRocketsAmount();
         return rocketTmp;
@@ -217,7 +235,7 @@ public class GameManager : MonoBehaviour
         }
         if ((mode == RocketLauncher.Mode.manualAiming || mode == RocketLauncher.Mode.tapLaunch) && amountOfPlayerRockets > 0)
         {
-            amountOfPlayerRockets--;
+            //amountOfPlayerRockets--;
             return true;
         }
         return false;
@@ -231,6 +249,13 @@ public class GameManager : MonoBehaviour
         rocket.gameObject.transform.position = rocket.P0;
     }
 
+    public void AsteroidBackToPool(AsteroidMotion asteroid)
+    {
+        asteroid.gameObject.transform.SetParent(asteroidsPool[0].gameObject.transform.parent);
+        asteroidsPool.Add(asteroid);
+        asteroid.gameObject.SetActive(false);
+    }
+
     public ThreeBezierScript GetEnemyRocketFromPool()
     {
         ThreeBezierScript rocketTmp = new ThreeBezierScript();
@@ -241,7 +266,6 @@ public class GameManager : MonoBehaviour
             enemyRocketsPool.Remove(rocketTmp);
             rocketTmp.gameObject.transform.parent = null;
             rocketTmp.isDrawn = false;
-            rocketTmp.GetComponent<SpriteRenderer>().sprite = sprites[Random.Range(0, sprites.Count)];
             currEnemyRockets.Add(rocketTmp);
             launchedERockets++;
         }
@@ -267,14 +291,6 @@ public class GameManager : MonoBehaviour
     public bool EnemyCanShoot()
     {
         return launchedERockets < eRocketsToLaunch && amountOfERocketsOnLevel - launchedERockets > 0;
-    }
-
-    public List<Sprite> sprites = new List<Sprite>();
-    private void CreateRocketSpritesPool()
-    {
-        Object[] tmp_sprites = Resources.LoadAll("Sprites/Rockets/EnemyRockets", typeof(Sprite));
-        foreach (var sprite in tmp_sprites)
-            sprites.Add((Sprite)sprite);
     }
 
     public void Explose(Vector3 coord)

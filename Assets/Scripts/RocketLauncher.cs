@@ -159,23 +159,25 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     private void RocketLaunch()
     {
-        ThreeBezierScript bezier = GameManager.Instance.GetRocketFromPool(currentMode);
-        bezier.currentMode = currentMode;
 
         if (currentMode == Mode.rocketGuidance || currentMode == Mode.armageddon)
         {
             if (GameManager.Instance.currEnemyRockets.Count > rocketGuidedRCounter)
             {
+                ThreeBezierScript bezier = GameManager.Instance.GetRocketFromPool(currentMode);
+                bezier.currentMode = currentMode;
                 ThreeBezierScript target = GameManager.Instance.currEnemyRockets[rocketGuidedRCounter];
                 Ray ray = new Ray(launchPoint, target.gameObject.transform.position - launchPoint);
                 bezier.SetPoints(launchPoint,
                                  ray.GetPoint(Vector3.Distance(launchPoint, target.gameObject.transform.position) / 2),
                                  target.gameObject.transform);
+                rocketGuidedRCounter++;
             }
-            else GameManager.Instance.RocketBackToPool(bezier);
         }
         if (currentMode == Mode.manualAiming || currentMode == Mode.tapLaunch)
         {
+            ThreeBezierScript bezier = GameManager.Instance.GetRocketFromPool(currentMode);
+            bezier.currentMode = currentMode;
             SetPoints(bezier);
         }
         cooldown = 0f;
@@ -188,19 +190,9 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         {
             Ray ray = new Ray(launchPoint, clickPoint - new Vector2(launchPoint.x, launchPoint.y));//new Vector2(launchPoint.x, launchPoint.y) - clickPoint);
             Vector2 P3 = new Vector2();
-            //if (offset == 0)
-            //    P3 = ray.GetPoint(300);
-            //else
-            //    P3 = ray.GetPoint(offset * 100);
-
             P3 = ray.GetPoint(Vector2.Distance(GameManager.Instance.maxScreenEdge, GameManager.Instance.minScreenEdge));
             bezier.SetPoints(launchPoint, clickPoint, P3);
         }
-        //if (currentMode == Mode.tapLaunch)
-        //{
-        //    //Ray ray = new Ray(launchPoint.position, clickPoint - new Vector2(launchPoint.x, launchPoint.y));
-        //    bezier.SetPoints(launchPoint, clickPoint, clickPoint);
-        //}
     }
     
     private void Lightning()
@@ -229,6 +221,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         else if (currentMode == Mode.tapLaunch)
             currentMode = Mode.manualAiming;
     }
+
     public void changeModeToManualAiming()
     {
         if (offset == defaultOffset)
@@ -251,7 +244,6 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         lastAimMode = currentMode;
         currentMode = Mode.rocketGuidance;
         RocketLaunch();
-        rocketGuidedRCounter++;
         currentMode = lastAimMode;
     }
 
@@ -263,7 +255,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         for (int i = 0; i < countOfTargets; i++)
         {
             RocketLaunch();
-            rocketGuidedRCounter++;
+            //rocketGuidedRCounter++;
         }
         rocketGuidedRCounter = 0;
         currentMode = lastAimMode;
