@@ -246,21 +246,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         RocketLaunch();
         currentMode = lastAimMode;
     }
-
-    public void launchArmageddon()
-    {
-        lastAimMode = currentMode;
-        currentMode = Mode.armageddon;
-        int countOfTargets = GameManager.Instance.currEnemyRockets.Count;
-        for (int i = 0; i < countOfTargets; i++)
-        {
-            RocketLaunch();
-            //rocketGuidedRCounter++;
-        }
-        rocketGuidedRCounter = 0;
-        currentMode = lastAimMode;
-    }
-
+    
     private IEnumerator timer(float time)
     {
         yield return new WaitForSeconds(time);

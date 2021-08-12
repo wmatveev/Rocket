@@ -30,10 +30,12 @@ public class ThreeBezierScript : MonoBehaviour
     public float[] speedByChordsLengths;
     protected float totalLength;
     private bool isExploding = false;
+    private float defaultScale;
     void Start() 
     {
         ResetCoords();
         lineRenderer = GetComponent<LineRenderer>();
+        defaultScale = gameObject.transform.localScale.x;
     }
 
     void FixedUpdate()
@@ -101,9 +103,10 @@ public class ThreeBezierScript : MonoBehaviour
                 GameManager.Instance.homePlanet.transform.position, GameManager.Instance.homePlanet.transform.position);
         }
     }
-    private float scaleMin = 0.3f, scaleMax = 1.4f;
+    private float scaleMin = 0.3f;
     private void SetCurrentScale()
     {
+        float scaleMax = defaultScale;
         float allPath = GameManager.Instance.enemyPlanet.transform.position.y - GameManager.Instance.homePlanet.transform.position.y;
         float currentDistance = GameManager.Instance.enemyPlanet.transform.position.y - gameObject.transform.position.y;
         float currentScale = scaleMin + (scaleMax - scaleMin) * (currentDistance / allPath);
@@ -140,10 +143,6 @@ public class ThreeBezierScript : MonoBehaviour
         return Random.value >= 0.5 ? 1 : -1;
     }
 
-    private bool isLinearMotion()
-    {
-        return false;
-    }
     private void DrawPath()
     {
         int sigmentNumbers = 20;
@@ -205,13 +204,27 @@ public class ThreeBezierScript : MonoBehaviour
             }
     }
 
+    public void DestroyWithDelay(float delay)
+    {
+        StartCoroutine(backToPoolAfterDelay(delay));
+    }
+
+    IEnumerator backToPoolAfterDelay(float time)
+    {
+        yield return new WaitForSecondsRealtime(time); 
+        GameManager.Instance.Explose(gameObject.transform.position);
+        if (gameObject.tag == "EnemyRocket")
+            GameManager.Instance.EnemyRocketBackToPool(this);
+        if (gameObject.tag == "Rocket")
+            GameManager.Instance.RocketBackToPool(this);
+    }
+
     void OnTriggerEnter2D(Collider2D col)
     {
         if (currentMode != RocketLauncher.Mode.loop)
         {
             if (col.gameObject.layer == gameObject.layer)
                 return;
-            //Debug.Log(gameObject.name + "  " + gameObject.layer);
             if (gameObject.layer == 7)
                 Explose();
             if (currentMode == RocketLauncher.Mode.rocketGuidance)
@@ -221,6 +234,8 @@ public class ThreeBezierScript : MonoBehaviour
             if (col.gameObject.tag == "HomePlanet")
             {
                 GameManager.Instance.LevelIsLosed();
+                GameManager.Instance.EnemyRocketBackToPool(this, false);
+                return;
             }
             if (currentMode == RocketLauncher.Mode.enemyAI)
             {
@@ -235,6 +250,11 @@ public class ThreeBezierScript : MonoBehaviour
 
             Destroy(gameObject);
         }
+    }
+
+    private void OnEnable()
+    {
+        t = 0;
     }
 
     void OnBecameInvisible()

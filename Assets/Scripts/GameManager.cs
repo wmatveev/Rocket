@@ -4,11 +4,6 @@ using System.Collections.Specialized;
 using UnityEngine;
 using UnityEngine.UI;
 
-//analytics
-using Firebase;
-using Firebase.Analytics;
-using Firebase.Extensions;
-using UnityEngine.Analytics;
 
 public class GameManager : MonoBehaviour
 {
@@ -40,13 +35,13 @@ public class GameManager : MonoBehaviour
         enemyPlanet = GameObject.FindWithTag("EnemyPlanet");
 
         SetCurrentLevel();
+        SetLevelSettings();
     }
 
     void Start()
     {
         SetScreenEdges();
-        SetLevelSettings();
-        StartFirebase();
+        AnalyticsManager.Instance.StartFirebase();
 
         createRocketPool("Rocket", amountOfSelfGuidedRockets + amountOfPlayerRockets + 5);
         createRocketPool("EnemyRocket", amountOfERocketsOnLevel);
@@ -116,60 +111,7 @@ public class GameManager : MonoBehaviour
     }
     #endregion
 
-    #region Analytics
-    //firebase info
-    DependencyStatus dependencyStatus = DependencyStatus.UnavailableOther;
-    private void StartFirebase()
-    {
-        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task => {
-            dependencyStatus = task.Result;
-            if (dependencyStatus == DependencyStatus.Available)
-            {
-                InitializeFirebase();
-            }
-            else
-                Debug.LogError("Firebase analytics failed: " + dependencyStatus);
-        });
-    }
-
-    void InitializeFirebase()
-    {
-        //Enabling data collection
-        FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
-        
-        //We can add it later:
-        //Set the user's sign up method
-        //FirebaseAnalytics.SetUserProperty(FirebaseAnalytics.UserPropertySignUpMethod, "Google");
-        //Set the user ID
-        //FirebaseAnalytics.SetUserId("uber_user_510");
-    }
-
-    private void EndlevelAnalytics()
-    {
-        float winRate;
-        if (!PlayerPrefs.HasKey("LosingOnThisLevel"))
-            winRate = 1f;
-        else
-        {
-            winRate = 1f / (1f + (float)PlayerPrefs.GetInt("LosingOnThisLevel"));
-            PlayerPrefs.DeleteKey("LosingOnThisLevel");
-        }
-
-        LevelInfo.Instance.SetEndLevelInfo(winRate);
-
-        string param = "winRateOnLevel" + currentLevel.ToString();
-
-        Analytics.CustomEvent("level " + currentLevel + " end", new Dictionary<string, object>
-        {
-            { param, winRate },
-            { "score", score }
-        });
-
-        FirebaseAnalytics.LogEvent(FirebaseAnalytics.EventLevelEnd, FirebaseAnalytics.ParameterLevel, currentLevel);
-        FirebaseAnalytics.LogEvent("winrate", param, winRate);
-        FirebaseAnalytics.LogEvent(FirebaseAnalytics.EventPostScore, FirebaseAnalytics.ParameterScore, score);
-    }
-    #endregion
+   
 
     #region RocketsManagement
     private void createRocketPool(string type, int count)
@@ -177,6 +119,8 @@ public class GameManager : MonoBehaviour
         GameObject rocketsPoolObj = new GameObject();
         rocketsPoolObj.name = type + 's';
         GameObject rocket = GameObject.FindWithTag(type);
+        if (!rocket)
+            return;
         for (int i = 0; i < count; i++)
         {
             var tmp_rocket = Instantiate(rocket, rocketsPoolObj.transform); 
@@ -194,17 +138,7 @@ public class GameManager : MonoBehaviour
         }
         Destroy(rocket);
     }
-
-    public AsteroidMotion GetAsteroidFromPool()
-    {
-        AsteroidMotion asteroidTmp = new AsteroidMotion();
-        asteroidTmp = asteroidsPool[0];
-        asteroidsPool.Remove(asteroidTmp);
-        asteroidTmp.gameObject.SetActive(true);
-        asteroidTmp.gameObject.transform.parent = null;
-        return asteroidTmp;
-    }
-
+    
     public ThreeBezierScript GetRocketFromPool(RocketLauncher.Mode mode)
     {
         ThreeBezierScript rocketTmp = new ThreeBezierScript();
@@ -248,6 +182,15 @@ public class GameManager : MonoBehaviour
         rocket.gameObject.SetActive(false);
         rocket.gameObject.transform.position = rocket.P0;
     }
+    public AsteroidMotion GetAsteroidFromPool()
+    {
+        AsteroidMotion asteroidTmp = new AsteroidMotion();
+        asteroidTmp = asteroidsPool[0];
+        asteroidsPool.Remove(asteroidTmp);
+        asteroidTmp.gameObject.SetActive(true);
+        asteroidTmp.gameObject.transform.parent = null;
+        return asteroidTmp;
+    }
 
     public void AsteroidBackToPool(AsteroidMotion asteroid)
     {
@@ -272,18 +215,21 @@ public class GameManager : MonoBehaviour
         return rocketTmp;
     }
     
-    public void EnemyRocketBackToPool(ThreeBezierScript enemyRocket)
+    public void EnemyRocketBackToPool(ThreeBezierScript enemyRocket, bool isShotDown = true)
     {
         if (currEnemyRockets.Contains(enemyRocket))       
             currEnemyRockets.Remove(enemyRocket);
-        score += (int)(100 * (1 - enemyRocket.T));
-        UIMenu.Instance.ResetLvlInfo();
-        enemyRocket.T = 0;
+        if (isShotDown)
+        {
+            score += (int)(100 * (1 - enemyRocket.T));
+            UIMenu.Instance.ResetLvlInfo();
+            amountOfERocketsOnLevel--;
+        }
+
         enemyRocket.gameObject.transform.SetParent(enemyRocketsPool[0].gameObject.transform.parent);
         enemyRocketsPool.Add(enemyRocket);
         enemyRocket.gameObject.SetActive(false);
         enemyRocket.gameObject.transform.position = enemyRocket.P0;
-        amountOfERocketsOnLevel--;
         if (currEnemyRockets.Count == 0)
             launchedERockets = 0;
     }
@@ -303,7 +249,7 @@ public class GameManager : MonoBehaviour
     {
         UIMenu.Instance.endLvlFade.SetActive(true);
         Time.timeScale = 0;
-        EndlevelAnalytics();
+        AnalyticsManager.Instance.EndlevelAnalytics();
         Text text = UIMenu.Instance.winPanel.transform.Find("Score").gameObject.GetComponent<Text>();
         text.text = "Score: " + score;
         UIMenu.Instance.winPanel.SetActive(true);

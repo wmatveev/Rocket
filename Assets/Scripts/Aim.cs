@@ -74,11 +74,15 @@ public class Aim : MonoBehaviour
             allMasks[i + countOfPoints - 1].gameObject.SetActive(true);
         }
         i++;
+        if (i >= countOfPoints)
+            return;
         allMasks[i].gameObject.transform.position = destination;
         allMasks[i].material.color = endColor;
         allMasks[i].gameObject.SetActive(true);
         allMasks[i + countOfPoints - 1].gameObject.SetActive(false);
         i++;
+        if (i >= countOfPoints)
+            return;
         for (; i < countOfPoints; i++)
         {
             allMasks[i].gameObject.SetActive(false);
