@@ -106,6 +106,8 @@ public class ThreeBezierScript : MonoBehaviour
     private float scaleMin = 0.3f;
     private void SetCurrentScale()
     {
+        if (!GameManager.Instance.enemyPlanet || !GameManager.Instance.homePlanet)
+            return;
         float scaleMax = defaultScale;
         float allPath = GameManager.Instance.enemyPlanet.transform.position.y - GameManager.Instance.homePlanet.transform.position.y;
         float currentDistance = GameManager.Instance.enemyPlanet.transform.position.y - gameObject.transform.position.y;
@@ -261,7 +263,7 @@ public class ThreeBezierScript : MonoBehaviour
     {
         if (gameObject.activeSelf == true)
         {
-            if (currentMode == RocketLauncher.Mode.manualAiming || currentMode == RocketLauncher.Mode.tapLaunch)
+            if (currentMode == RocketLauncher.Mode.manualAiming || currentMode == RocketLauncher.Mode.tapLaunch || currentMode == RocketLauncher.Mode.autoGun)
                 GameManager.Instance.RocketBackToPool(this);
             else Destroy(gameObject);
         }

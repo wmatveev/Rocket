@@ -28,16 +28,17 @@ public class UIMenu : MonoBehaviour
 
         losePanel = GameObject.Find("losePanel");
         winPanel = GameObject.Find("winPanel");
-        for (int i = 0; i < armaButton.transform.childCount; i++)
-        {
-            Image tmp = armaButton.transform.GetChild(i).gameObject.GetComponent<Image>(); 
-            if (tmp)
+        if (armaButton)
+            for (int i = 0; i < armaButton.transform.childCount; i++)
             {
-                armaEffects.Add(tmp);
-                tmp.gameObject.SetActive(false);
+                Image tmp = armaButton.transform.GetChild(i).gameObject.GetComponent<Image>();
+                if (tmp)
+                {
+                    armaEffects.Add(tmp);
+                    tmp.gameObject.SetActive(false);
+                }
             }
-        }
-        
+
         losePanel.SetActive(false);
         winPanel.SetActive(false);
         endLvlFade.SetActive(false);
@@ -54,7 +55,8 @@ public class UIMenu : MonoBehaviour
 
     public void SetRocketsAmount()
     {
-        amountOfSelfGuidedRockets.text = GameManager.Instance.amountOfSelfGuidedRockets.ToString();
+        if (amountOfSelfGuidedRockets)
+            amountOfSelfGuidedRockets.text = GameManager.Instance.amountOfSelfGuidedRockets.ToString();
         //amountOfPlayerRockets.text = GameManager.Instance.amountOfPlayerRockets.ToString();
 
     }

@@ -15,11 +15,11 @@ public class GameManager : MonoBehaviour
     public List<ThreeBezierScript> enemyRocketsPool = new List<ThreeBezierScript>();
     public List<ThreeBezierScript> currEnemyRockets = new List<ThreeBezierScript>();
     public List<AsteroidMotion> asteroidsPool = new List<AsteroidMotion>();
+    public Transform spawnPosition;
 
     [HideInInspector] public GameObject homePlanet, enemyPlanet;
     public GameObject explosion;
     public GameObject lightning;
-   
     public int amountOfSelfGuidedRockets;
     public int eRocketsToLose;
     [HideInInspector] public int currentLevel;
@@ -46,9 +46,12 @@ public class GameManager : MonoBehaviour
         createRocketPool("Rocket", amountOfSelfGuidedRockets + amountOfPlayerRockets + 5);
         createRocketPool("EnemyRocket", amountOfERocketsOnLevel);
         createRocketPool("Asteroid", 10);
-        ParticleTrigger triggerScript = lightning.GetComponent<ParticleTrigger>();
-        if (triggerScript)
-            triggerScript.SetTriggers();
+        if (lightning)
+        {
+            ParticleTrigger triggerScript = lightning.GetComponent<ParticleTrigger>();
+            if (triggerScript)
+                triggerScript.SetTriggers();
+        }
 
     }
     #region ScreenSettings
@@ -103,24 +106,52 @@ public class GameManager : MonoBehaviour
     }
     private void SetLevelSettings()
     {
-        amountOfERocketsOnLevel = 3 + currentLevel;
-        amountOfPlayerRockets = (int)(amountOfERocketsOnLevel * 1.2f) + 4;
-        eRocketsToLaunch = (currentLevel / 5) + 1; 
-        speedCoef = 1f + (currentLevel % 5)/ 10f;
-        EnemyAI.Instance.timeToReload = (currentLevel < 5) ? 0 : (float)(1f + Random.value);
+        amountOfERocketsOnLevel = 3 * 4 + currentLevel;
+        amountOfPlayerRockets = (int)(amountOfERocketsOnLevel * 1.2f) + 10;
+        eRocketsToLaunch = (currentLevel / 5) + 4;
+        speedCoef = 1f + (currentLevel % 5) / 10f;
+        if (EnemyAI.Instance)
+            EnemyAI.Instance.timeToReload = (float)(1f + Random.value);//(currentLevel < 5) ? 0 : (float)(1f + Random.value);
+        RegulateDifficultyLevel();
+    }
+
+    private void RegulateDifficultyLevel()
+    {
+        if (PlayerPrefs.HasKey("WinStreak"))
+        {
+            if (PlayerPrefs.GetInt("WinStreak") > 3)
+            {
+                int strike = PlayerPrefs.GetInt("WinStreak");
+                eRocketsToLaunch += strike / 3;
+                speedCoef *= (1f + (float)(strike)%10);
+                if (EnemyAI.Instance)
+                    EnemyAI.Instance.timeToReload *= (1f - (float)strike % 50);
+                Debug.Log(strike % 10);
+            }
+        } 
+        //if (PlayerPrefs.HasKey("LoseStreak"))
+        //{
+        //    if (PlayerPrefs.GetInt("LoseStreak") > 2)
+        //    {
+        //        int strike = PlayerPrefs.GetInt("LoseStreak");
+        //        eRocketsToLaunch -= strike / 3;
+        //        speedCoef /= (1f + (float)strike % 10);
+        //        Debug.Log(strike % 10);
+        //    }
+        //}
     }
     #endregion
-
-   
 
     #region RocketsManagement
     private void createRocketPool(string type, int count)
     {
-        GameObject rocketsPoolObj = new GameObject();
-        rocketsPoolObj.name = type + 's';
         GameObject rocket = GameObject.FindWithTag(type);
         if (!rocket)
             return;
+        GameObject rocketsPoolObj = new GameObject();
+        rocketsPoolObj.name = type + 's';
+        rocketsPoolObj.transform.position = rocket.transform.position;
+
         for (int i = 0; i < count; i++)
         {
             var tmp_rocket = Instantiate(rocket, rocketsPoolObj.transform); 
@@ -146,6 +177,7 @@ public class GameManager : MonoBehaviour
         {
             rocketTmp = playerRocketsPool[0];
             playerRocketsPool.Remove(rocketTmp);
+            rocketTmp.gameObject.transform.position = spawnPosition.position;
             rocketTmp.gameObject.SetActive(true);
             rocketTmp.gameObject.transform.parent = null;
             if (mode == RocketLauncher.Mode.armageddon || mode == RocketLauncher.Mode.rocketGuidance)
@@ -159,7 +191,7 @@ public class GameManager : MonoBehaviour
     }
     private bool CanGetRocket(RocketLauncher.Mode mode)
     {
-        if (mode == RocketLauncher.Mode.armageddon)
+        if (mode == RocketLauncher.Mode.armageddon || mode == RocketLauncher.Mode.autoGun)
             return true;
 
         if (mode == RocketLauncher.Mode.rocketGuidance && (amountOfSelfGuidedRockets > 0))
@@ -174,19 +206,21 @@ public class GameManager : MonoBehaviour
         }
         return false;
     }
+
     public void RocketBackToPool(ThreeBezierScript rocket)
     {
         rocket.gameObject.transform.SetParent(playerRocketsPool[0].gameObject.transform.parent);
-        rocket.T = 0;
         playerRocketsPool.Add(rocket);
         rocket.gameObject.SetActive(false);
         rocket.gameObject.transform.position = rocket.P0;
     }
+
     public AsteroidMotion GetAsteroidFromPool()
     {
         AsteroidMotion asteroidTmp = new AsteroidMotion();
         asteroidTmp = asteroidsPool[0];
         asteroidsPool.Remove(asteroidTmp);
+        asteroidTmp.gameObject.transform.position = spawnPosition.position;
         asteroidTmp.gameObject.SetActive(true);
         asteroidTmp.gameObject.transform.parent = null;
         return asteroidTmp;
@@ -205,9 +239,10 @@ public class GameManager : MonoBehaviour
         if (enemyRocketsPool.Count > 0)
         {
             rocketTmp = enemyRocketsPool[0];
-            rocketTmp.gameObject.gameObject.SetActive(true);
             enemyRocketsPool.Remove(rocketTmp);
             rocketTmp.gameObject.transform.parent = null;
+            rocketTmp.gameObject.transform.position = spawnPosition.position;
+            rocketTmp.gameObject.gameObject.SetActive(true);
             rocketTmp.isDrawn = false;
             currEnemyRockets.Add(rocketTmp);
             launchedERockets++;
@@ -252,6 +287,7 @@ public class GameManager : MonoBehaviour
         AnalyticsManager.Instance.EndlevelAnalytics();
         Text text = UIMenu.Instance.winPanel.transform.Find("Score").gameObject.GetComponent<Text>();
         text.text = "Score: " + score;
+        SetWinStreak(1);
         UIMenu.Instance.winPanel.SetActive(true);
     }
     
@@ -265,9 +301,36 @@ public class GameManager : MonoBehaviour
                 PlayerPrefs.SetInt("LosingOnThisLevel", PlayerPrefs.GetInt("LosingOnThisLevel") + 1);
             else
                 PlayerPrefs.SetInt("LosingOnThisLevel", 1);
-
+            SetWinStreak(-2);
             Time.timeScale = 0;
             UIMenu.Instance.losePanel.SetActive(true);
         }
     }
+
+    private void SetWinStreak(int i = 1)
+    {
+        if (PlayerPrefs.HasKey("WinStreak"))
+        {
+            Debug.Log("HasKey");
+            PlayerPrefs.SetInt("WinStreak", PlayerPrefs.GetInt("WinStreak") + i);
+        }
+        else
+        {
+            Debug.Log("HasntKey");
+            PlayerPrefs.SetInt("WinStreak", 1);
+        }
+        Debug.Log(PlayerPrefs.GetInt("WinStreak"));
+        //if (PlayerPrefs.HasKey("LoseStreak"))
+        //    PlayerPrefs.DeleteKey("LoseStreak");
+    }
+    //private void SetLoseStreak()
+    //{
+    //    if (PlayerPrefs.HasKey("LoseStreak"))
+    //        PlayerPrefs.SetInt("LoseStreak", PlayerPrefs.GetInt("LoseStreak") + 1);
+    //    else
+    //        PlayerPrefs.SetInt("LoseStreak", 1);
+
+    //    if (PlayerPrefs.HasKey("WinStreak"))
+    //        PlayerPrefs.DeleteKey("WinStreak");
+    //}
 }

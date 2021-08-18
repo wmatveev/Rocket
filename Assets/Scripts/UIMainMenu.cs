@@ -14,7 +14,7 @@ public class UIMainMenu : MonoBehaviour
 
     public void PlayGame()
     {
-        SceneManager.LoadScene("FreeBezier"); 
+        SceneManager.LoadScene(1); 
     }
     
     public void ResetSave()

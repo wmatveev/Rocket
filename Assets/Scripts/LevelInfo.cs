@@ -23,5 +23,4 @@ public class LevelInfo : MonoBehaviour
         score = GameManager.Instance.score;
         this.winrate = winRate;
     }
-
 }

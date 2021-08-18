@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
+public class RocketLauncher : MonoBehaviour
 {
     #region Singleton
     public static RocketLauncher Instance { get; private set; }
@@ -38,7 +38,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         autoGun
     }
 
-    private Mode currentMode, lastAimMode;
+    public Mode currentMode, lastAimMode;
 
     void Start()
     {
@@ -78,7 +78,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     {
         return cooldown >= timeToReload;
     }
-    public virtual void OnPointerDown(PointerEventData eventData)
+    public void _OnPointerDown(PointerEventData eventData)
     { 
         //This code was used to move auto gun
         //results.Clear();
@@ -100,13 +100,13 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             clickPoint = aimPosition;
             aim.transform.position = aimPosition;
             aim.SetActive(true);
-            OnDrag(eventData);
+            //_OnDrag(eventData);
         }
-        if (currentMode == Mode.manualAiming)
-            OnDrag(eventData);
+        //if (currentMode == Mode.manualAiming)
+        //    _OnDrag(eventData);
     }
 
-    public virtual void OnDrag(PointerEventData eventData)
+    public virtual void _OnDrag(PointerEventData eventData)
     {
         if (isDraged == true)
         {
@@ -141,7 +141,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         }
     }
 
-    public void OnPointerUp(PointerEventData eventData)
+    public void _OnPointerUp(PointerEventData eventData)
     {
         if (CanShoot() && (currentMode == Mode.manualAiming || currentMode == Mode.tapLaunch))
         {
@@ -159,7 +159,6 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     private void RocketLaunch()
     {
-
         if (currentMode == Mode.rocketGuidance || currentMode == Mode.armageddon)
         {
             if (GameManager.Instance.currEnemyRockets.Count > rocketGuidedRCounter)
@@ -167,6 +166,7 @@ public class RocketLauncher : MonoBehaviour, IPointerDownHandler, IPointerUpHand
                 ThreeBezierScript bezier = GameManager.Instance.GetRocketFromPool(currentMode);
                 bezier.currentMode = currentMode;
                 ThreeBezierScript target = GameManager.Instance.currEnemyRockets[rocketGuidedRCounter];
+                bezier.speed = target.speed * 1.2f;
                 Ray ray = new Ray(launchPoint, target.gameObject.transform.position - launchPoint);
                 bezier.SetPoints(launchPoint,
                                  ray.GetPoint(Vector3.Distance(launchPoint, target.gameObject.transform.position) / 2),
