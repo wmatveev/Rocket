@@ -10,6 +10,9 @@ TagManager:
   - HomePlanet
   - AutoGun
   - Asteroid
+  - ESpaceShip
+  - Recources
+  - Mineral
   layers:
   - Default
   - TransparentFX
@@ -19,7 +22,7 @@ TagManager:
   - UI
   - Player
   - Enemy
-  - 
+  - Resources
   - 
   - 
   - 

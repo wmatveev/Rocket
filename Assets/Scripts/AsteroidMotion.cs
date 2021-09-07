@@ -7,6 +7,7 @@ public class AsteroidMotion : MonoBehaviour
     public float speed;
     public Vector2 startPos, endPos;
     private float t = 0;
+    private bool isExploding = false;
 
     void FixedUpdate()
     {
@@ -21,12 +22,13 @@ public class AsteroidMotion : MonoBehaviour
         gameObject.transform.position = new Vector3(gameObject.transform.position.x, gameObject.transform.position.y, 22);
 
         if (t >= 1)
-            GameManager.Instance.AsteroidBackToPool(this);
+            AsteroidGenerator.Instance.AsteroidBackToPool(this);
     }
 
     private void OnEnable()
     {
         t = 0;
+        isExploding = false;
     }
 
     void OnTriggerEnter2D(Collider2D col)
@@ -35,8 +37,14 @@ public class AsteroidMotion : MonoBehaviour
                 return;
         if (col.gameObject.layer == 6)
         {
-            GameManager.Instance.Explose(gameObject.transform.position);
-            GameManager.Instance.AsteroidBackToPool(this);
+            if (!isExploding)
+            {
+                isExploding = true;
+                GameManager.Instance.Explose(gameObject.transform.position);
+                AsteroidGenerator.Instance.SpawnMineralAt(gameObject.transform.position);
+                AsteroidGenerator.Instance.AsteroidBackToPool(this);
+            }
+            else return;
         }
     }
 }

@@ -8,10 +8,16 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MainMenu.unity
     guid: df99a37fd8350034398f325027747e91
-  - enabled: 0
+  - enabled: 1
+    path: Assets/Scenes/Map.unity
+    guid: 5eb1b68582289734ab63a4b94861e1ad
+  - enabled: 1
     path: Assets/Scenes/PlanetDefence.unity
     guid: bc3112459be1f4d94966631f82f54b44
   - enabled: 1
-    path: Assets/Scenes/ArcadeMode.unity
-    guid: 574dfac627278064da23f230260b04c9
+    path: Assets/Scenes/ArcadeModeNew.unity
+    guid: 30d80570a22ef5e44813a87b18bc0fff
+  - enabled: 0
+    path: Assets/Scenes/TestScene.unity
+    guid: ae7ba621b703d8d4b8c2e9855286048e
   m_configObjects: {}

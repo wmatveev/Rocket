@@ -41,7 +41,7 @@ public class Armageddon : MonoBehaviour
     {
         armageddonPS.Stop();
         armageddonPSPool.Add(armageddonPS);
-        for (int i = 1; i < GameManager.Instance.eRocketsToLaunch; i++)
+        for (int i = 1; i < LevelInfo.Instance.eRocketsToLaunch; i++)
         {
             var tmp = Instantiate(armageddonPS);
             tmp.Stop();

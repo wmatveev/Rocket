@@ -5,9 +5,9 @@ using UnityEngine;
 //[ExecuteAlways]
 public class ThreeBezierScript : MonoBehaviour
 {
-    [SerializeField] private Vector3 p0;
-    [SerializeField] private Vector3 p1;
-    [SerializeField] private Vector3 p2;
+    [SerializeField] private Vector3 p0 = new Vector3();
+    [SerializeField] private Vector3 p1 = new Vector3();
+    [SerializeField] private Vector3 p2 = new Vector3();
 
     public Vector3 P0 { get { return p0; } }
     public Vector3 P1 { get { return p1; } }
@@ -84,8 +84,7 @@ public class ThreeBezierScript : MonoBehaviour
         {
             if (currentMode != RocketLauncher.Mode.loop)
             {
-                Explose();
-                Destroy(gameObject);
+                gameObject.SetActive(false);
             }
             else
             {
@@ -97,7 +96,7 @@ public class ThreeBezierScript : MonoBehaviour
     private void MoveForward()
     {
         transform.Translate(Vector3.up * speed * Time.deltaTime);
-        if (!GameManager.Instance.IsOnTheScreen(transform.position))
+        if (!ScreenInfo.Instance.IsOnTheScreen(transform.position))
         {
             SetPoints(transform.position,
                 GameManager.Instance.homePlanet.transform.position, GameManager.Instance.homePlanet.transform.position);
@@ -123,9 +122,9 @@ public class ThreeBezierScript : MonoBehaviour
     }
     public void RandomP1(float minOffset = 3f, float maxOffset = 7f)
     {
-        if (currentMode == RocketLauncher.Mode.enemyAI && EnemyAI.Instance.enemyMode == EnemyAI.eMode.Linear)
+        if (currentMode == RocketLauncher.Mode.enemyAI && EnemyAttacker.Instance.enemyMode == EnemyAttacker.eMode.Linear)
         {
-            float x = Random.value >= 0.5 ? GameManager.Instance.minScreenEdge.x : GameManager.Instance.maxScreenEdge.x;
+            float x = Random.value >= 0.5 ? ScreenInfo.Instance.minScreenEdge.x : ScreenInfo.Instance.maxScreenEdge.x;
             float y = P0.y - Random.Range(minOffset, maxOffset);
             p1 = new Vector2(x, y);
             p2 = new Vector2(x, y);
@@ -136,6 +135,13 @@ public class ThreeBezierScript : MonoBehaviour
             p1 = new Vector3(P0.x + Random.Range(minOffset, maxOffset) * randomPlusMinus(),
                             P0.y + Random.Range(minOffset, maxOffset) * randomPlusMinus(),
                             P0.z);
+            if (!ScreenInfo.Instance.IsOnTheScreen(p1))
+            {
+                if (p1.x < ScreenInfo.Instance.minScreenEdge.x)
+                    p1.x = ScreenInfo.Instance.minScreenEdge.x;
+                if (p1.x > ScreenInfo.Instance.maxScreenEdge.x)
+                    p1.x = ScreenInfo.Instance.maxScreenEdge.x;
+            }
         }
         ResetCoords();
     }
@@ -190,9 +196,9 @@ public class ThreeBezierScript : MonoBehaviour
 
     public void ResetCoords()
     {
-        if (currentMode == RocketLauncher.Mode.enemyAI && EnemyAI.Instance.enemyMode == EnemyAI.eMode.Linear)
-            SetForwardRotation();
-        else
+        //if (currentMode == RocketLauncher.Mode.enemyAI) && EnemyAttacker.Instance.enemyMode == EnemyAttacker.eMode.Linear)
+        //    SetForwardRotation();
+        //else
             Bezier.PrepareCoords(subdivs, P0, P1, P2, ref speedByChordsLengths, ref totalLength);
     }
 
@@ -223,6 +229,9 @@ public class ThreeBezierScript : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D col)
     {
+        if (gameObject.layer == 8 || col.gameObject.layer == 8)
+            return; 
+
         if (currentMode != RocketLauncher.Mode.loop)
         {
             if (col.gameObject.layer == gameObject.layer)
@@ -235,7 +244,7 @@ public class ThreeBezierScript : MonoBehaviour
             }
             if (col.gameObject.tag == "HomePlanet")
             {
-                GameManager.Instance.LevelIsLosed();
+                LevelInfo.Instance.LevelIsLosed();
                 GameManager.Instance.EnemyRocketBackToPool(this, false);
                 return;
             }
@@ -254,6 +263,38 @@ public class ThreeBezierScript : MonoBehaviour
         }
     }
 
+    void OnTriggerEnter(Collider col)
+    {
+        if (currentMode != RocketLauncher.Mode.loop)
+        {
+            if (col.gameObject.layer == gameObject.layer)
+                return;
+            if (gameObject.layer == 7)
+                Explose();
+            if (currentMode == RocketLauncher.Mode.rocketGuidance)
+            {
+                RocketLauncher.Instance.rocketGuidedRCounter--;
+            }
+            if (col.gameObject.tag == "HomePlanet")
+            {
+                LevelInfo.Instance.LevelIsLosed();
+                GameManager.Instance.EnemyRocketBackToPool(this, false);
+                return;
+            }
+            if (currentMode == RocketLauncher.Mode.enemyAI)
+            {
+                GameManager.Instance.EnemyRocketBackToPool(this);
+                return;
+            }
+            if (currentMode != RocketLauncher.Mode.rocketGuidance && currentMode != RocketLauncher.Mode.none)
+            {
+                GameManager.Instance.RocketBackToPool(this);
+                return;
+            }
+
+            Destroy(gameObject);
+        }
+    }
     private void OnEnable()
     {
         t = 0;

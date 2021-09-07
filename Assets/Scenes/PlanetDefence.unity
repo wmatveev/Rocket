@@ -1652,8 +1652,8 @@ GameObject:
   m_Component:
   - component: {fileID: 674736082}
   - component: {fileID: 674736081}
-  - component: {fileID: 674736080}
   - component: {fileID: 674736083}
+  - component: {fileID: 674736080}
   m_Layer: 0
   m_Name: UAnalytics Level Info Tracker
   m_TagString: Untagged
@@ -1673,8 +1673,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c198eb7206b8014eb777082d5d3c30d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentLevel: 0
   winrate: 0
+  speedCoef: 0
+  amountOfSelfGuidedRockets: 10
+  eRocketsToLose: 5
+  amountOfERocketsOnLevel: 0
+  eRocketsToLaunch: 0
+  launchedERockets: 0
+  amountOfPlayerRockets: 0
+  currentLevel: 0
+  catchedERockets: 0
   score: 0
 --- !u!114 &674736081
 MonoBehaviour:
@@ -3839,7 +3847,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d08e074eec39234dbf60b8706ec4d58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerShip: {fileID: 0}
 --- !u!21 &1435054845
 Material:
   serializedVersion: 6
@@ -4309,7 +4316,7 @@ MonoBehaviour:
           m_ValueType: System.Int32
           m_Value: 
           m_Target:
-            m_Target: {fileID: 674736080}
+            m_Target: {fileID: 0}
             m_Path: currentLevel
             m_ValidTypeNames:
             - System.Int32
@@ -4331,7 +4338,7 @@ MonoBehaviour:
           m_ValueType: System.Int32
           m_Value: 0
           m_Target:
-            m_Target: {fileID: 674736080}
+            m_Target: {fileID: 0}
             m_Path: score
             m_ValidTypeNames:
             - System.Int32
@@ -4361,7 +4368,7 @@ MonoBehaviour:
           m_ValueType: System.Single
           m_Value: 0
           m_Target:
-            m_Target: {fileID: 674736080}
+            m_Target: {fileID: 0}
             m_Path: winrate
             m_ValidTypeNames:
             - System.Int32
@@ -4604,36 +4611,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1512403958}
   m_CullTransparentMesh: 1
---- !u!1 &1525796030
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1525796031}
-  m_Layer: 0
-  m_Name: SpawnPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1525796031
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1525796030}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 11.44, y: -2.87, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 18
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1573287828
 GameObject:
   m_ObjectHideFlags: 0
@@ -4668,23 +4645,11 @@ MonoBehaviour:
   enemyRocketsPool: []
   currEnemyRockets: []
   asteroidsPool: []
-  spawnPosition: {fileID: 1525796031}
+  spawnPosition: {x: 0, y: 0, z: 0}
   homePlanet: {fileID: 0}
   enemyPlanet: {fileID: 0}
   explosion: {fileID: 901702175953132532, guid: a8bdb751a52c2d64eafbdf4e2f8ce15d, type: 3}
   lightning: {fileID: 230679981}
-  amountOfSelfGuidedRockets: 10
-  eRocketsToLose: 5
-  currentLevel: 0
-  catchedERockets: 0
-  score: 0
-  distance: 0
-  minScreenEdge: {x: 0, y: 0}
-  maxScreenEdge: {x: 0, y: 0}
-  amountOfERocketsOnLevel: 0
-  eRocketsToLaunch: 0
-  launchedERockets: 0
-  amountOfPlayerRockets: 20
 --- !u!4 &1573287830
 Transform:
   m_ObjectHideFlags: 0
@@ -4709,12 +4674,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1573287828}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c198eb7206b8014eb777082d5d3c30d, type: 3}
+  m_Script: {fileID: 11500000, guid: 659fd8dacc26d5e44b2da9cd53e18041, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentLevel: 0
-  winrate: 0
-  score: 0
+  distance: 0
+  minScreenEdge: {x: 0, y: 0}
+  maxScreenEdge: {x: 0, y: 0}
 --- !u!1 &1583912279
 GameObject:
   m_ObjectHideFlags: 0
