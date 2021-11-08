@@ -121,20 +121,20 @@ public class LevelInfo : MonoBehaviour
 
     public void ArcadeModeCompleted()
     {
-        UIMenu.Instance.endLvlFade.SetActive(true);
+        UIArcadeMenu.Instance.endLvlFade.SetActive(true);
         Time.timeScale = 0;
-        UIMenu.Instance.attackSceneTransition.SetActive(true);
+        UIArcadeMenu.Instance.attackSceneTransition.SetActive(true);
     }
 
     public void LevelIsCompleted()
     {
-        UIMenu.Instance.endLvlFade.SetActive(true);
+        UIArcadeMenu.Instance.endLvlFade.SetActive(true);
         Time.timeScale = 0;
         AnalyticsManager.Instance.EndlevelAnalytics();
-        Text text = UIMenu.Instance.winPanel.transform.Find("Score").gameObject.GetComponent<Text>();
+        Text text = UIArcadeMenu.Instance.winPanel.transform.Find("Score").gameObject.GetComponent<Text>();
         text.text = "Score: " + score;
         SetWinStreak(1);
-        UIMenu.Instance.winPanel.SetActive(true);
+        UIArcadeMenu.Instance.winPanel.SetActive(true);
     }
 
     public void LevelIsLosed()
@@ -142,14 +142,14 @@ public class LevelInfo : MonoBehaviour
         catchedERockets++;
         if (catchedERockets >= eRocketsToLose)
         {
-            UIMenu.Instance.endLvlFade.SetActive(true);
+            UIArcadeMenu.Instance.endLvlFade.SetActive(true);
             if (PlayerPrefs.HasKey("LosingOnThisLevel"))
                 PlayerPrefs.SetInt("LosingOnThisLevel", PlayerPrefs.GetInt("LosingOnThisLevel") + 1);
             else
                 PlayerPrefs.SetInt("LosingOnThisLevel", 1);
             SetWinStreak(-1);
             Time.timeScale = 0;
-            UIMenu.Instance.losePanel.SetActive(true);
+            UIArcadeMenu.Instance.losePanel.SetActive(true);
         }
     }
 

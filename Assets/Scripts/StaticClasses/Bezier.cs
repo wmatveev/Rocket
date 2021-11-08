@@ -89,9 +89,7 @@ public static class Bezier
         Vector2 bezier_coords = GetTwoPoint(p0, p2, t);
         float y = bezier_coords.y;
         float x = p0.x + a * Mathf.Cos(t_ellipse) - a;
-        Debug.Log(p0.z);
         float z = p0.z + b * Mathf.Sin(t_ellipse);
-        Debug.Log(z);
 
         Debug.Log(new Vector3(x, y, z));
         return new Vector3(x, y, z);

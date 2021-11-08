@@ -13,6 +13,7 @@ public class GameManager : MonoBehaviour
     #endregion
 
     public List<ThreeBezierScript> playerRocketsPool = new List<ThreeBezierScript>();
+    private GameObject playerRocketPrototype;
     public List<ThreeBezierScript> enemyRocketsPool = new List<ThreeBezierScript>();
     public List<ThreeBezierScript> currEnemyRockets = new List<ThreeBezierScript>();
     public List<ShipController> enemyFleet = new List<ShipController>();   
@@ -64,8 +65,9 @@ public class GameManager : MonoBehaviour
         ///! - > find all
         GameObject rocket = GameObject.FindWithTag(type);
         if (!rocket)
-            return;        
-
+            return;
+        if (type == "Rocket")
+            playerRocketPrototype = rocket;
         for (int i = 0; i < count; i++)
         {
             var tmp_rocket = Instantiate(rocket, gameObjectsStorage.transform); 
@@ -89,17 +91,28 @@ public class GameManager : MonoBehaviour
     {
         if (CanGetRocket(mode)) 
         {
-            ThreeBezierScript rocketTmp = playerRocketsPool[0];
-            playerRocketsPool.Remove(rocketTmp);
+            ThreeBezierScript rocketTmp;
+            if (playerRocketsPool[0])
+            {
+                rocketTmp = playerRocketsPool[0];
+                playerRocketsPool.Remove(rocketTmp);
+            }
+            else
+            {
+                rocketTmp = Instantiate(playerRocketPrototype).GetComponent<ThreeBezierScript>();
+                Debug.Log("Instantiated");
+            }
+            //ThreeBezierScript rocketTmp = playerRocketsPool[0];
+            //playerRocketsPool.Remove(rocketTmp);
             rocketTmp.gameObject.transform.position = spawnPosition;
             rocketTmp.gameObject.SetActive(true);
-            rocketTmp.gameObject.transform.parent = null;
+            //rocketTmp.gameObject.transform.parent = null;
             if (mode == RocketLauncher.Mode.armageddon || mode == RocketLauncher.Mode.rocketGuidance)
             {
                 Animator animator = rocketTmp.GetComponent<Animator>();
                 animator.runtimeAnimatorController = Resources.Load("Animation/Rockets/Fire2") as RuntimeAnimatorController;
             }
-            UIMenu.Instance.SetRocketsAmount();
+            UIArcadeMenu.Instance.SetRocketsAmount();
             return rocketTmp;
         }
         return null;
@@ -177,7 +190,7 @@ public class GameManager : MonoBehaviour
         if (isShotDown)
         {
             LevelInfo.Instance.score += (int)(100 * (1 - enemyRocket.T));
-            UIMenu.Instance.ResetLvlInfo();
+            UIArcadeMenu.Instance.ResetLvlInfo();
             LevelInfo.Instance.amountOfERocketsOnLevel--;
         }
 

@@ -9,15 +9,18 @@ EditorBuildSettings:
     path: Assets/Scenes/MainMenu.unity
     guid: df99a37fd8350034398f325027747e91
   - enabled: 1
-    path: Assets/Scenes/Map.unity
-    guid: 5eb1b68582289734ab63a4b94861e1ad
-  - enabled: 1
+    path: Assets/Scenes/NewMap_Horizontal.unity
+    guid: 33df5da560551e3469e8b052f2b75ea7
+  - enabled: 0
     path: Assets/Scenes/PlanetDefence.unity
     guid: bc3112459be1f4d94966631f82f54b44
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/ArcadeModeNew.unity
     guid: 30d80570a22ef5e44813a87b18bc0fff
   - enabled: 0
     path: Assets/Scenes/TestScene.unity
     guid: ae7ba621b703d8d4b8c2e9855286048e
+  - enabled: 1
+    path: Assets/Scenes/ArcadeMode_isometric.unity
+    guid: 5b71b5125874fec4facfc8e1dfcd5a93
   m_configObjects: {}

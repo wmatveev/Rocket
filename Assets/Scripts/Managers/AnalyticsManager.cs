@@ -15,6 +15,7 @@ public class AnalyticsManager : MonoBehaviour
     void Start()
     {
         Instance = this;
+        StartFirebase();
     }
 
     #region Analytics

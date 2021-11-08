@@ -9,6 +9,7 @@ public class AsteroidGenerator : MonoBehaviour
     private float cooldown = 0f, startTimeToReload;
     public List<AsteroidMotion> asteroidsPool = new List<AsteroidMotion>();
     public List<GameObject> mineralsPool = new List<GameObject>();
+    [SerializeField] private GameObject mineralProtorype;
     private void Start()
     {
         Instance = this;
@@ -51,13 +52,21 @@ public class AsteroidGenerator : MonoBehaviour
     private void createPool(string type, int count)
     {
         GameObject[] gameObjects = GameObject.FindGameObjectsWithTag(type);
-        for (int j = 0; j < gameObjects.Length; j++)
-            Debug.Log(gameObjects[j]);
-
         if (gameObjects.Length == 0)
             return;
+
+        //for (int j = 0; j < gameObjects.Length; j++)
+            //Debug.Log(gameObjects[j]);
+        if (type == "Mineral")
+        {
+            mineralProtorype = Instantiate(gameObjects[0]);
+            mineralProtorype.transform.position = GameManager.Instance.spawnPosition;
+        }
+
         GameObject parent = new GameObject();
         parent.name = type + "s Pool";
+
+
         for (int i = 0; i < count / gameObjects.Length; i++)
         {
             for (int j = 0; j < gameObjects.Length; j++)
@@ -83,7 +92,7 @@ public class AsteroidGenerator : MonoBehaviour
     }
 
     public AsteroidMotion GetAsteroidFromPool()
-    {
+    {        
         AsteroidMotion asteroidTmp = asteroidsPool[0];
         asteroidsPool.Remove(asteroidTmp);
         asteroidTmp.gameObject.transform.position = GameManager.Instance.spawnPosition;
@@ -107,11 +116,25 @@ public class AsteroidGenerator : MonoBehaviour
 
     public GameObject GetMineralFromPool()
     {
-        GameObject mineralTmp = mineralsPool[0];
-        mineralsPool.Remove(mineralTmp);
+        GameObject mineralTmp;
+        int i = 0;
+        do
+        {
+            if (i >= mineralsPool.Count)
+            {
+                mineralTmp = Instantiate(mineralProtorype);
+                mineralTmp.SetActive(false);
+                break;
+            }
+            mineralTmp = mineralsPool[i];
+            mineralsPool.Remove(mineralTmp);
+            i++;
+        } while (!mineralsPool.Contains(mineralTmp));
+        
+        //GameObject mineralTmp = mineralsPool[0];
+        //mineralsPool.Remove(mineralTmp);
         mineralTmp.transform.position = GameManager.Instance.spawnPosition;
         mineralTmp.SetActive(true);
-        Debug.Log("Минерал остался в пуле = " + mineralsPool.Contains(mineralTmp));
         return mineralTmp;
     }
 

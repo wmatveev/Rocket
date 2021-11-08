@@ -56,6 +56,7 @@ public class ThreeBezierScript : MonoBehaviour
             Destroy(gameObject);
         }        
     }
+
     //For spiral
     //float t_ellipse = 0;
     //public float a, b, t_speed;
@@ -82,6 +83,11 @@ public class ThreeBezierScript : MonoBehaviour
 
         if (t >= 1)
         {
+            if (gameObject.tag == "Mineral")
+            {
+                AsteroidGenerator.Instance.MineralBackToPool(gameObject);
+            }
+            else
             if (currentMode != RocketLauncher.Mode.loop)
             {
                 gameObject.SetActive(false);
@@ -93,6 +99,7 @@ public class ThreeBezierScript : MonoBehaviour
             }
         }
     }
+
     private void MoveForward()
     {
         transform.Translate(Vector3.up * speed * Time.deltaTime);
@@ -102,6 +109,7 @@ public class ThreeBezierScript : MonoBehaviour
                 GameManager.Instance.homePlanet.transform.position, GameManager.Instance.homePlanet.transform.position);
         }
     }
+
     private float scaleMin = 0.3f;
     private void SetCurrentScale()
     {

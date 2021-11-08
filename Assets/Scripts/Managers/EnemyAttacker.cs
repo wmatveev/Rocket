@@ -84,7 +84,7 @@ public class EnemyAttacker : MonoBehaviour
             startPos.x = ScreenInfo.Instance.maxScreenEdge.x;
             startPos.y = Random.Range(ScreenInfo.Instance.minScreenEdge.y, ScreenInfo.Instance.maxScreenEdge.y);
             endPos.y = Random.Range(ScreenInfo.Instance.minScreenEdge.y, ScreenInfo.Instance.maxScreenEdge.y);
-            //права€ верхн€€ точка
+            //Top right point on screen
             Vector2 topRight = ScreenInfo.Instance.maxScreenEdge;
             Vector2 dir1 = topRight - startPos;
             Vector2 dir2 = endPos - startPos;

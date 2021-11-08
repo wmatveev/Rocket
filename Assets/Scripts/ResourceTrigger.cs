@@ -32,7 +32,6 @@ public class ResourceTrigger : MonoBehaviour
     {
         if (!collider.enabled)
             collider.enabled = true;
-        AsteroidGenerator.Instance.MineralBackToPool(gameObject);
     }
 
     private void OnEnable()
